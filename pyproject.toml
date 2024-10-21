@@ -6,7 +6,7 @@ authors = [
     {name = "Victoria Huisman", email = "hello.victoria@outlook.ie"},
 ]
 dependencies = [
-    "tk>=0.1.0",
+    "pillow>=11.0.0",
 ]
 requires-python = "==3.11.*"
 readme = "README.md"
@@ -16,5 +16,3 @@ license = {text = "MIT"}
 [tool.pdm]
 distribution = false
 
-[tool.pdm.scripts]
-app = { cmd = "pdm run python -m saraxsoft.main train", help = "Run the application." }
