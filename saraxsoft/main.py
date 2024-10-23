@@ -16,7 +16,6 @@ class MainWindow:
         self.frames = {}
         self.selected_config = None  # To store the selected configuration
 
-
         for F in (StartPage, SecondPage, ThirdPage):
             page_name = F.__name__
             frame = F(parent=self.container, controller=self)
@@ -28,7 +27,14 @@ class MainWindow:
     def show_frame(self, page_name):
         '''Show a frame for the given page name'''
         frame = self.frames[page_name]
+
+        if page_name == "ThirdPage":
+            frame.update_config()
+
         frame.tkraise()
+
+    def set_config(self, config):
+        self.selected_config = config
 
 
 class StartPage(tk.Frame):
@@ -41,11 +47,11 @@ class StartPage(tk.Frame):
         container.pack(pady=20)
 
         # Create three frames for the boxes, passing different image paths
-        self.create_box(container, "Four", "images/four.png")
-        self.create_box(container, "Six", "images/six.png")
-        self.create_box(container, "Eight", "images/eight.png")
+        self.create_box(container, "Four", "images/four.png", "4-Arms")
+        self.create_box(container, "Six", "images/six.png", "6-Arms")
+        self.create_box(container, "Eight", "images/eight.png", "8-Arms")
 
-    def create_box(self, container, label_text, image_path):
+    def create_box(self, container, label_text, image_path, config):
         frame = ttk.Frame(container, relief="solid", borderwidth=60)
         frame.pack(side="left", padx=21, pady=53)
 
@@ -66,13 +72,16 @@ class StartPage(tk.Frame):
 
         image_label.pack(pady=10)
 
-        if label_text == "Four":
-            next_page = "SecondPage"
-        else:
-            next_page = "ThirdPage"
-
-        button = ttk.Button(frame, text=f"Select {label_text}", command=lambda: self.controller.show_frame(next_page))
+        button = ttk.Button(frame, text=f"Select {label_text}", 
+                            command=lambda: self.select_config(config,label_text))
         button.pack(pady=10)
+
+    def select_config(self, config,label):
+        self.controller.set_config(config)
+        if label == "Four":
+            self.controller.show_frame("SecondPage")
+        else: 
+            self.controller.show_frame("ThirdPage")
 
 
 class SecondPage(tk.Frame):
@@ -86,13 +95,13 @@ class SecondPage(tk.Frame):
         container = ttk.Frame(self)
         container.pack(pady=20)
 
-        self.create_box(container, "Plus", "images/four.png")
-        self.create_box(container, "X", "images/four_x.png")
+        self.create_box(container, "Plus", "images/four.png", "4-Arms")
+        self.create_box(container, "X", "images/four_x.png", "4-Arms-X")
 
         button = ttk.Button(self, text="Back to Main Page", command=lambda: controller.show_frame("StartPage"))
         button.pack(pady=10)
 
-    def create_box(self, container, label_text, image_path):
+    def create_box(self, container, label_text, image_path, config):
         frame = ttk.Frame(container, relief="solid", borderwidth=60)
         frame.pack(side="left", padx=21, pady=53)
 
@@ -112,8 +121,13 @@ class SecondPage(tk.Frame):
 
         image_label.pack(pady=10)
 
-        button = ttk.Button(frame, text=f"Select {label_text}", command=lambda: self.controller.show_frame("ThirdPage"))
+        button = ttk.Button(frame, text=f"Select {label_text}", command=lambda: self.select_config(config))
         button.pack(pady=10)
+
+    def select_config(self, config):
+        '''Save the selected configuration and go to the ThirdPage'''
+        self.controller.set_config(config)
+        self.controller.show_frame("ThirdPage")
 
 
 class ThirdPage(tk.Frame):
@@ -122,48 +136,77 @@ class ThirdPage(tk.Frame):
         self.controller = controller
         self.root = controller.root
 
-        label = ttk.Label(self, text="This is the Third Page")
+        label = ttk.Label(self, text="Drone Arm Configuration")
         label.pack()
 
-        # Create the canvas for the circles
         self.canvas = tk.Canvas(self, width=400, height=400)
         self.canvas.pack()
 
-        # Create individual circles as objects
-        self.circle1 = self.canvas.create_oval(180, 80, 220, 120, fill="lightblue")
-        self.canvas.create_text(200, 100, text="1", font=("Arial", 12))
-        
-        self.circle2 = self.canvas.create_oval(280, 180, 320, 220, fill="lightgreen")
-        self.canvas.create_text(300, 200, text="2", font=("Arial", 12))
-        
-        self.circle3 = self.canvas.create_oval(180, 280, 220, 320, fill="lightcoral")
-        self.canvas.create_text(200, 300, text="3", font=("Arial", 12))
-        
-        self.circle4 = self.canvas.create_oval(80, 180, 120, 220, fill="lightyellow")
-        self.canvas.create_text(100, 200, text="4", font=("Arial", 12))
+        self.circles = []
+        self.current_circle = None
+        self.blinking_task = None
 
-        # Track blinking circle
-        self.current_circle = self.circle1
-        self.blinking_task = None  # To track the after() call ID
-
-        # Start the blinking
-        self.blink()
-
-        # Bind space key to change circle
         self.root.bind("<space>", self.next_circle)
 
-        # Back button
         button = ttk.Button(self, text="Back to Main Page", command=lambda: controller.show_frame("StartPage"))
         button.pack(pady=10)
 
+    def update_config(self):
+        self.canvas.delete("all")
+
+        config = self.controller.selected_config
+
+        if config == "4-Arms-X":
+            self.circles = [
+                (120, 120, "lightblue", "1"),   # Top-left
+                (280, 120, "lightgreen", "2"),  # Top-right
+                (280, 280, "lightcoral", "3"),  # Bottom-right
+                (120, 280, "lightyellow", "4")  # Bottom-left
+            ]
+        if config == "4-Arms":
+            self.circles = [
+                (200, 100, "lightblue", "1"),  # Top
+                (300, 200, "lightgreen", "2"), # Right
+                (200, 300, "lightcoral", "3"), # Bottom
+                (100, 200, "lightyellow", "4") # Left
+            ]
+        elif config == "6-Arms":
+            self.circles = [
+                (200, 80, "lightblue", "1"),   # Top
+                (280, 140, "lightgreen", "2"), # Top-right
+                (280, 260, "lightcoral", "3"), # Bottom-right
+                (200, 320, "lightyellow", "4"),# Bottom
+                (120, 260, "lightpink", "5"),  # Bottom-left
+                (120, 140, "lightcyan", "6")   # Top-left
+            ]
+        elif config == "8-Arms":
+            self.circles = [
+                (200, 80, "lightblue", "1"),   # Top
+                (270, 120, "lightgreen", "2"), # Top-right
+                (300, 200, "lightcoral", "3"), # Right
+                (270, 280, "lightyellow", "4"),# Bottom-right
+                (200, 320, "lightpink", "5"),  # Bottom
+                (130, 280, "lightcyan", "6"),  # Bottom-left
+                (100, 200, "lightgray", "7"),  # Left
+                (130, 120, "lightgoldenrod", "8") # Top-left
+            ]
+
+        self.draw_circles()
+
+    def draw_circles(self):
+        self.circle_ids = []
+        for x, y, color, label in self.circles:
+            circle_id = self.canvas.create_oval(x-20, y-20, x+20, y+20, fill=color)
+            self.canvas.create_text(x, y, text=label, font=("Arial", 12))
+            self.circle_ids.append(circle_id)
+
+        if self.circle_ids:
+            self.current_circle = self.circle_ids[0]
+            self.blink()
+
     def blink(self):
         current_colour = self.canvas.itemcget(self.current_circle, "fill")
-        original_colour = {
-            self.circle1: "lightblue",
-            self.circle2: "lightgreen",
-            self.circle3: "lightcoral",
-            self.circle4: "lightyellow"
-        }[self.current_circle]
+        original_colour = self.get_original_color(self.current_circle)
         
         new_colour = "red" if current_colour != "red" else original_colour
         self.canvas.itemconfig(self.current_circle, fill=new_colour)
@@ -174,24 +217,17 @@ class ThirdPage(tk.Frame):
         if self.blinking_task is not None:
             self.root.after_cancel(self.blinking_task)
             self.blinking_task = None
+
+        current_index = self.circle_ids.index(self.current_circle)
+        self.canvas.itemconfig(self.current_circle, fill=self.get_original_color(self.current_circle))
+
+        self.current_circle = self.circle_ids[(current_index+1) % len(self.circle_ids)]
+        self.blinking_task = self.root.after(500, self.blink)
+
+    def get_original_color(self, circle_id):
+        index = self.circle_ids.index(circle_id)
+        return self.circles[index][2]
         
-        original_colour = {
-            self.circle1: "lightblue",
-            self.circle2: "lightgreen",
-            self.circle3: "lightcoral",
-            self.circle4: "lightyellow"
-        }[self.current_circle]
-        self.canvas.itemconfig(self.current_circle, fill=original_colour)
-        
-        next_circle = {
-            self.circle1: self.circle2,
-            self.circle2: self.circle3,
-            self.circle3: self.circle4,
-            self.circle4: self.circle1
-        }[self.current_circle]
-        
-        self.current_circle = next_circle
-        self.blink()
 
 
 def main():
@@ -200,7 +236,5 @@ def main():
     root.mainloop()
 
 
-
 if __name__ == "__main__":
     main()
-
