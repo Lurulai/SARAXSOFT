@@ -14,7 +14,7 @@ class MainWindow:
 
         # Initialize frames (pages)
         self.frames = {}
-        self.selected_config = None  # To store the selected configuration
+        self.selected_config = None  
 
         for F in (StartPage, SecondPage, ThirdPage):
             page_name = F.__name__
@@ -143,6 +143,7 @@ class ThirdPage(tk.Frame):
         self.canvas.pack()
 
         self.circles = []
+        self.count = 0
         self.current_circle = None
         self.blinking_task = None
 
@@ -201,7 +202,7 @@ class ThirdPage(tk.Frame):
             self.circle_ids.append(circle_id)
 
         if self.circle_ids:
-            self.current_circle = self.circle_ids[0]
+            self.current_circle = self.circle_ids[self.count]
             self.blink()
 
     def blink(self):
@@ -214,19 +215,33 @@ class ThirdPage(tk.Frame):
         self.blinking_task = self.root.after(500, self.blink)
 
     def next_circle(self, event):
+        if self.count == len(self.circle_ids)-1:
+            self.root.unbind("<space>")
+            self.show_popup()
+
         if self.blinking_task is not None:
             self.root.after_cancel(self.blinking_task)
             self.blinking_task = None
 
-        current_index = self.circle_ids.index(self.current_circle)
         self.canvas.itemconfig(self.current_circle, fill=self.get_original_color(self.current_circle))
-
-        self.current_circle = self.circle_ids[(current_index+1) % len(self.circle_ids)]
-        self.blinking_task = self.root.after(500, self.blink)
-
+        self.count = (self.count+1) % len(self.circle_ids)
+        self.current_circle = self.circle_ids[self.count]
+        self.blink()
+        
     def get_original_color(self, circle_id):
-        index = self.circle_ids.index(circle_id)
-        return self.circles[index][2]
+        return self.circles[self.count][2]
+    
+    def show_popup(self):
+        popup = tk.Toplevel(self.root)
+        popup.title("Success!")
+        
+        popup.geometry("300x200")
+
+        label = ttk.Label(popup, text="Arms good to go!")
+        label.pack(pady=20)
+
+        close_button = ttk.Button(popup, text="Close", command=self.root.destroy)
+        close_button.pack(pady=10)
         
 
 
