@@ -1,6 +1,12 @@
 import tkinter as tk
 from tkinter import ttk
 from PIL import Image, ImageTk  # For loading images
+import serial
+import time
+import threading
+
+arduino_port = 'COM3'  
+baud_rate = 9600
 
 class MainWindow:
     def __init__(self, root):
@@ -135,6 +141,10 @@ class ThirdPage(tk.Frame):
         tk.Frame.__init__(self, parent)
         self.controller = controller
         self.root = controller.root
+        self.ser = serial.Serial(arduino_port, baud_rate, timeout=1)  # Open the serial port
+        self.check_thread = threading.Thread(target=self.check_serial)
+        self.check_thread.daemon = True  # Daemonize thread for automatic exit
+        self.check_thread.start()  # Start the thread
 
         label = ttk.Label(self, text="Drone Arm Configuration")
         label.pack()
@@ -147,7 +157,7 @@ class ThirdPage(tk.Frame):
         self.current_circle = None
         self.blinking_task = None
 
-        self.root.bind("<space>", self.next_circle)
+       # self.root.bind("<space>", self.next_circle)
 
         button = ttk.Button(self, text="Back to Main Page", command=lambda: controller.show_frame("StartPage"))
         button.pack(pady=10)
@@ -207,28 +217,45 @@ class ThirdPage(tk.Frame):
 
     def blink(self):
         current_colour = self.canvas.itemcget(self.current_circle, "fill")
-        original_colour = self.get_original_color(self.current_circle)
+        original_colour = self.get_original_color()
         
         new_colour = "red" if current_colour != "red" else original_colour
         self.canvas.itemconfig(self.current_circle, fill=new_colour)
         
         self.blinking_task = self.root.after(500, self.blink)
 
-    def next_circle(self, event):
+    def check_serial(self):
+        while True: 
+            try:
+                id_str = self.ser.readline().decode('utf-8').rstrip()
+                print(id_str)
+                if id_str.isdigit():
+                    id = int(id_str)
+                    if(id-4) == self.count:
+                        self.next_circle()
+            except serial.SerialException as e:
+                print(f"Serial error: {e}")  
+            time.sleep(1) 
+
+    def close_serial(self):
+        self.ser.close()
+
+    def next_circle(self):
         if self.count == len(self.circle_ids)-1:
-            self.root.unbind("<space>")
+            #self.root.unbind("<space>")
+            self.close_serial()
             self.show_popup()
 
         if self.blinking_task is not None:
             self.root.after_cancel(self.blinking_task)
             self.blinking_task = None
 
-        self.canvas.itemconfig(self.current_circle, fill=self.get_original_color(self.current_circle))
+        self.canvas.itemconfig(self.current_circle, fill=self.get_original_color())
         self.count = (self.count+1) % len(self.circle_ids)
         self.current_circle = self.circle_ids[self.count]
         self.blink()
         
-    def get_original_color(self, circle_id):
+    def get_original_color(self):
         return self.circles[self.count][2]
     
     def show_popup(self):
