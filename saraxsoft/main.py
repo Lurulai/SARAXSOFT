@@ -5,7 +5,11 @@ import serial
 import time
 import threading
 
-arduino_port = 'COM3'  
+import ttkbootstrap as ttk
+import customtkinter as ctk
+
+
+arduino_port = 'COM5'  
 baud_rate = 9600
 
 class MainWindow:
@@ -13,6 +17,8 @@ class MainWindow:
         self.root = root
         self.root.title("Raspberry Pi UI")
         self.root.geometry("800x480")
+
+
 
         # Create a container for multiple pages
         self.container = tk.Frame(self.root)
@@ -48,9 +54,18 @@ class StartPage(tk.Frame):
         tk.Frame.__init__(self, parent)
         self.controller = controller
 
-        # Create a container for the three boxes
-        container = ttk.Frame(self)
-        container.pack(pady=20)
+         # Title/Heading
+        self.title_label = ctk.CTkLabel(self, text="Select a configuration", font=("Arial", 30, "bold"))
+        self.title_label.pack(pady=20)
+
+
+        # Customized style for the button
+        style = ttk.Style()
+        style.configure("My.TButton", font=("Helvetica", 14, "bold"), foreground="#FFFFFF", background="#4CAF50")
+        
+        # Box Container
+        container = ttk.Frame(self, padding=20, style="TFrame", relief="flat")
+        container.pack(pady=10)
 
         # Create three frames for the boxes, passing different image paths
         self.create_box(container, "Four", "images/four.png", "4-Arms")
@@ -58,13 +73,17 @@ class StartPage(tk.Frame):
         self.create_box(container, "Eight", "images/eight.png", "8-Arms")
 
     def create_box(self, container, label_text, image_path, config):
-        frame = ttk.Frame(container, relief="solid", borderwidth=60)
-        frame.pack(side="left", padx=21, pady=53)
+        # frame = ttk.Frame(container, relief="solid", borderwidth=60)
+        frame = ttk.Frame(container, relief="flat", borderwidth=0)
+        # frame.pack(side="left", padx=21, pady=53)
+
+        frame.pack(side="left", padx=50, pady=53)
+
 
         # Load the image
         try:
             img = Image.open(image_path)
-            img = img.resize((100, 100))
+            img = img.resize((200, 200))
             img_tk = ImageTk.PhotoImage(img)
         except Exception as e:
             print(f"Error loading image: {e}")
@@ -78,9 +97,15 @@ class StartPage(tk.Frame):
 
         image_label.pack(pady=10)
 
-        button = ttk.Button(frame, text=f"Select {label_text}", 
-                            command=lambda: self.select_config(config,label_text))
-        button.pack(pady=10)
+        # Use place to set the button within the frame, avoiding overlap with the other boxes
+        button = ctk.CTkButton(
+            master=frame,
+            text=f"Select {label_text}",
+            command=lambda: self.select_config(config, label_text)
+        )
+        button.pack(pady=10)  # Adds some vertical spacing between the image and button
+
+        #button.place(relx=0.5, rely=1, anchor="s", y=-10)  # Centered at the bottom within each frame
 
     def select_config(self, config,label):
         self.controller.set_config(config)
@@ -95,25 +120,44 @@ class SecondPage(tk.Frame):
         tk.Frame.__init__(self, parent)
         self.controller = controller
 
-        label = ttk.Label(self, text="This is the Second Page")
-        label.pack()
 
-        container = ttk.Frame(self)
+        # Customized style for the button
+        style = ttk.Style()
+        style.configure("My.TButton", font=("Helvetica", 14, "bold"), foreground="#FFFFFF", background="#4CAF50")
+        
+        # Box Container
+        container = ttk.Frame(self, padding=20, style="TFrame", relief="flat")
         container.pack(pady=20)
 
         self.create_box(container, "Plus", "images/four.png", "4-Arms")
         self.create_box(container, "X", "images/four_x.png", "4-Arms-X")
 
-        button = ttk.Button(self, text="Back to Main Page", command=lambda: controller.show_frame("StartPage"))
-        button.pack(pady=10)
+        # Load the icon image (adjust the path and size as needed)
+        self.icon_image = ctk.CTkImage(Image.open("images/back.png"), size=(30, 30))  # Adjust size
+        self.back_button_icon = ctk.CTkButton(
+            self,
+            image=self.icon_image,
+            text="",
+            text_color="Black",
+            command=lambda: controller.show_frame("StartPage"),
+            fg_color="green",
+            hover_color="lightgreen",
+            width=120,
+            height=50,
+            corner_radius=10  # Rounded corners
+        )
+        self.back_button_icon.pack(pady=10)  # Icon button without text
+
+        # button = ttk.Button(self, text="Back to Main Page", command=lambda: controller.show_frame("StartPage"))
+        # button.pack(pady=10)
 
     def create_box(self, container, label_text, image_path, config):
-        frame = ttk.Frame(container, relief="solid", borderwidth=60)
-        frame.pack(side="left", padx=21, pady=53)
+        frame = ttk.Frame(container, relief="flat", borderwidth=0)
+        frame.pack(side="left", padx=50, pady=53)
 
         try:
             img = Image.open(image_path)
-            img = img.resize((100, 100))
+            img = img.resize((200, 200))
             img_tk = ImageTk.PhotoImage(img)
         except Exception as e:
             print(f"Error loading image: {e}")
@@ -127,8 +171,16 @@ class SecondPage(tk.Frame):
 
         image_label.pack(pady=10)
 
-        button = ttk.Button(frame, text=f"Select {label_text}", command=lambda: self.select_config(config))
-        button.pack(pady=10)
+        # button = ttk.Button(frame, text=f"Select {label_text}", command=lambda: self.select_config(config))
+        # button.pack(pady=10)
+
+        # Use place to set the button within the frame, avoiding overlap with the other boxes
+        button = ctk.CTkButton(
+            master=frame,
+            text=f"Select {label_text}",
+            command=lambda: self.select_config(config)
+        )
+        button.pack(pady=10)  # Adds some vertical spacing between the image and button
 
     def select_config(self, config):
         '''Save the selected configuration and go to the ThirdPage'''
@@ -136,37 +188,66 @@ class SecondPage(tk.Frame):
         self.controller.show_frame("ThirdPage")
 
 
-class ThirdPage(tk.Frame):
+class ThirdPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
-        tk.Frame.__init__(self, parent)
+        ctk.CTkFrame.__init__(self, parent)
         self.controller = controller
         self.root = controller.root
+        # Set the background color of the frame to white using customtkinter's fg_color
+        self.configure(fg_color="white")  # Use fg_color for customtkinter widgets
+
+        # Set up the serial connection
         self.ser = serial.Serial(arduino_port, baud_rate, timeout=1)  # Open the serial port
         self.check_thread = threading.Thread(target=self.check_serial)
         self.check_thread.daemon = True  # Daemonize thread for automatic exit
         self.check_thread.start()  # Start the thread
 
-        label = ttk.Label(self, text="Drone Arm Configuration")
-        label.pack()
+        # Title/Heading
+        self.title_label = ctk.CTkLabel(self, text="Robotic Arms Configuration", font=("Arial", 30, "bold"))
+        self.title_label.pack(pady=20)
 
-        self.canvas = tk.Canvas(self, width=400, height=400)
-        self.canvas.pack()
+        # Canvas to hold the circles
+        self.canvas = ctk.CTkCanvas(self, width=400, height=400, bg="white", highlightthickness=0)
+        self.canvas.pack(pady=10)
 
+
+        # Set up circles
         self.circles = []
         self.count = 0
         self.current_circle = None
         self.blinking_task = None
 
-       # self.root.bind("<space>", self.next_circle)
+        # # Back Button
+        # self.back_button = ctk.CTkButton(self, text="Back to Main Page", command=lambda: controller.show_frame("StartPage"))
+        # self.back_button.pack(pady=10)
 
-        button = ttk.Button(self, text="Back to Main Page", command=lambda: controller.show_frame("StartPage"))
-        button.pack(pady=10)
+        # # Load the icon image (adjust the path and size as needed)
+        # self.icon_image = ctk.CTkImage(Image.open("images/back.png"), size=(40, 40))  # Adjust size
+        # self.back_button_icon = ctk.CTkButton(self, image=self.icon_image, command=lambda: controller.show_frame("StartPage"))
+        # self.back_button_icon.pack(pady=10)  # Icon button instead of text button
+
+        # Load the icon image (adjust the path and size as needed)
+        self.icon_image = ctk.CTkImage(Image.open("images/back.png"), size=(30, 30))  # Adjust size
+        self.back_button_icon = ctk.CTkButton(
+            self,
+            image=self.icon_image,
+            text="",
+            text_color="Black",
+            command=lambda: controller.show_frame("StartPage"),
+            fg_color="green",
+            hover_color="lightgreen",
+            width=120,
+            height=50,
+            corner_radius=10  # Rounded corners
+        )
+        self.back_button_icon.pack(pady=10)  # Icon button without text
 
     def update_config(self):
         self.canvas.delete("all")
 
         config = self.controller.selected_config
 
+        # Define positions, colors, and labels for different configurations
         if config == "4-Arms-X":
             self.circles = [
                 (120, 120, "lightblue", "1"),   # Top-left
@@ -174,7 +255,7 @@ class ThirdPage(tk.Frame):
                 (280, 280, "lightcoral", "3"),  # Bottom-right
                 (120, 280, "lightyellow", "4")  # Bottom-left
             ]
-        if config == "4-Arms":
+        elif config == "4-Arms":
             self.circles = [
                 (200, 100, "lightblue", "1"),  # Top
                 (300, 200, "lightgreen", "2"), # Right
@@ -202,15 +283,17 @@ class ThirdPage(tk.Frame):
                 (130, 120, "lightgoldenrod", "8") # Top-left
             ]
 
+        # Draw the circles with updated positions and colors
         self.draw_circles()
 
     def draw_circles(self):
         self.circle_ids = []
         for x, y, color, label in self.circles:
-            circle_id = self.canvas.create_oval(x-20, y-20, x+20, y+20, fill=color)
-            self.canvas.create_text(x, y, text=label, font=("Arial", 12))
+            circle_id = self.canvas.create_oval(x-30, y-30, x+30, y+30, fill=color, outline="black", width=2)
+            self.canvas.create_text(x, y, text=label, font=("Arial", 14, "bold"), fill="black")
             self.circle_ids.append(circle_id)
 
+        # Set the first circle as the current circle to be highlighted
         if self.circle_ids:
             self.current_circle = self.circle_ids[self.count]
             self.blink()
@@ -219,13 +302,18 @@ class ThirdPage(tk.Frame):
         current_colour = self.canvas.itemcget(self.current_circle, "fill")
         original_colour = self.get_original_color()
         
+        # Toggle between red and original color for blink effect
         new_colour = "red" if current_colour != "red" else original_colour
         self.canvas.itemconfig(self.current_circle, fill=new_colour)
         
         self.blinking_task = self.root.after(500, self.blink)
 
+    def get_original_color(self):
+        # Returns the original color based on the current selected circle index
+        return self.circles[self.count][2]
+
     def check_serial(self):
-        while True: 
+        while True:
             try:
                 id_str = self.ser.readline().decode('utf-8').rstrip()
                 print(id_str)
@@ -234,15 +322,14 @@ class ThirdPage(tk.Frame):
                     if(id-4) == self.count:
                         self.next_circle()
             except serial.SerialException as e:
-                print(f"Serial error: {e}")  
-            time.sleep(1) 
+                print(f"Serial error: {e}")
+            time.sleep(1)
 
     def close_serial(self):
         self.ser.close()
 
     def next_circle(self):
         if self.count == len(self.circle_ids)-1:
-            #self.root.unbind("<space>")
             self.close_serial()
             self.show_popup()
 
@@ -254,27 +341,32 @@ class ThirdPage(tk.Frame):
         self.count = (self.count+1) % len(self.circle_ids)
         self.current_circle = self.circle_ids[self.count]
         self.blink()
-        
-    def get_original_color(self):
-        return self.circles[self.count][2]
-    
+
     def show_popup(self):
         popup = tk.Toplevel(self.root)
-        popup.title("Success!")
-        
+        popup.title("Success")
         popup.geometry("300x200")
+        popup.config(bg="white")  # Set background color of the popup window to white
 
-        label = ttk.Label(popup, text="Arms good to go!")
-        label.pack(pady=20)
+        # Label Styling with CTkLabel
+        label = ctk.CTkLabel(popup, text="All arms are correctly mounted.", font=("Arial", 14, "bold"), width=250, height=30, anchor="center")
+        label.pack(pady=30)  # Add some vertical padding for a neat look
 
-        close_button = ttk.Button(popup, text="Close", command=self.root.destroy)
-        close_button.pack(pady=10)
-        
+        # Customize the Close Button
+        close_button = ctk.CTkButton(popup, text="Close", command=popup.destroy, font=("Arial", 12), width=120)
+        close_button.pack(pady=10)  # Add some padding for spacing
 
 
 def main():
-    root = tk.Tk()
+    #root = tk.Tk()
+    
+    # create CTk window
+    root = ctk.CTk()
     app = MainWindow(root)
+
+    # button = customtkinter.CTkButton(master=root, text="Hello world!")
+    # button.place(x=400,y=240)
+
     root.mainloop()
 
 
