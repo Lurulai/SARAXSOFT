@@ -1,6 +1,9 @@
 """Contains all the settings for the program."""
 
 
+from saraxsoft.utils.path_resolver import PathResolver
+
+
 class ConstSettings:
     """Constant settings."""
 
@@ -20,3 +23,9 @@ class ConstSettings:
     DEFAULT_ENTRY_BORDER_COLOR = ("#9D9D9D", "#595959")  # (Light=Grey600, Dark=Grey800)
     CHANGED_ENTRY_BORDER_COLOR = ("#64B5F6", "#1565C0")  # (Light=Blue300, Dark=Blue800)
     INVALID_ENTRY_BORDER_COLOR = ("#E57373", "#C62828")  # (Light=Red300, Dark=Red800)
+
+
+class AppConfig:
+    """Configuration for the app."""
+
+    _ASSET_PATH = PathResolver.resolve_path("assets")

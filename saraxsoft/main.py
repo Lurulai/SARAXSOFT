@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-import tkinter as tk
-
-from saraxsoft.ui.main_window import MainWindow
+from saraxsoft.ui.app import App
 
 # Constants for Arduino connection
 arduino_port: str = "COM3"  # The port where the Arduino is connected
@@ -15,12 +13,11 @@ def main():
     """
     Initialize and run the application.
 
-    This function creates the root Tkinter window, initializes the MainWindow
+    This function creates the root Tkinter window, initializes the
     application, and starts the Tkinter event loop.
     """
-    root = tk.Tk()
-    _app = MainWindow(root)
-    root.mainloop()
+    sarax_app = App()
+    sarax_app.mainloop()
 
 
 if __name__ == "__main__":
