@@ -161,6 +161,10 @@ ignore = [
 convention = "numpy"
 
 [tool.pyright]
+extraPaths = ["__pypackages__/3.11/lib", ".venv/lib/python3.11/site-packages"]
+diagnosticMode = "workspace"
+typeCheckingMode = "strict"
+autoImportCompletions = true
 reportUnknownMemberType = false
 reportUnknownVariableType = false
 reportPrivateUsage = false
