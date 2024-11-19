@@ -1,0 +1,14 @@
+{
+    "python.autoComplete.extraPaths": ["__pypackages__/3.11/lib", ".venv/lib/python3.11/site-packages"],
+    "python.analysis.autoImportCompletions": true,
+    "python.languageServer": "Pylance",
+    "python.analysis.diagnosticMode":"workspace",
+    "explorer.autoRevealExclude": {
+        "**/node_modules": true,
+        "**/bower_components": true,
+        "**/.venv": true,
+        "**/__pypackages__": true,
+        "**/__pycache__": true,
+    },
+    "python.analysis.typeCheckingMode": "strict",
+}
