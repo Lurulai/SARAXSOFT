@@ -9,7 +9,7 @@ import ttkbootstrap as ttk
 import customtkinter as ctk
 
 
-arduino_port = 'COM5'  
+arduino_port = 'COM4'  
 baud_rate = 9600
 
 class MainWindow:
@@ -250,37 +250,37 @@ class ThirdPage(ctk.CTkFrame):
         # Define positions, colors, and labels for different configurations
         if config == "4-Arms-X":
             self.circles = [
-                (120, 120, "lightblue", "1"),   # Top-left
-                (280, 120, "lightgreen", "2"),  # Top-right
-                (280, 280, "lightcoral", "3"),  # Bottom-right
-                (120, 280, "lightyellow", "4")  # Bottom-left
+                (120, 120, "red", "1"),   # Top-left
+                (280, 120, "red", "2"),  # Top-right
+                (280, 280, "red", "3"),  # Bottom-right
+                (120, 280, "red", "4")  # Bottom-left
             ]
         elif config == "4-Arms":
             self.circles = [
-                (200, 100, "lightblue", "1"),  # Top
-                (300, 200, "lightgreen", "2"), # Right
-                (200, 300, "lightcoral", "3"), # Bottom
-                (100, 200, "lightyellow", "4") # Left
+                (200, 100, "red", "1"),  # Top
+                (300, 200, "red", "2"), # Right
+                (200, 300, "red", "3"), # Bottom
+                (100, 200, "red", "4") # Left
             ]
         elif config == "6-Arms":
             self.circles = [
-                (200, 80, "lightblue", "1"),   # Top
-                (280, 140, "lightgreen", "2"), # Top-right
-                (280, 260, "lightcoral", "3"), # Bottom-right
-                (200, 320, "lightyellow", "4"),# Bottom
-                (120, 260, "lightpink", "5"),  # Bottom-left
-                (120, 140, "lightcyan", "6")   # Top-left
+                (200, 80, "red", "1"),   # Top
+                (280, 140, "red", "2"), # Top-right
+                (280, 260, "red", "3"), # Bottom-right
+                (200, 320, "red", "4"),# Bottom
+                (120, 260, "red", "5"),  # Bottom-left
+                (120, 140, "red", "6")   # Top-left
             ]
         elif config == "8-Arms":
             self.circles = [
-                (200, 80, "lightblue", "1"),   # Top
-                (270, 120, "lightgreen", "2"), # Top-right
-                (300, 200, "lightcoral", "3"), # Right
-                (270, 280, "lightyellow", "4"),# Bottom-right
-                (200, 320, "lightpink", "5"),  # Bottom
-                (130, 280, "lightcyan", "6"),  # Bottom-left
-                (100, 200, "lightgray", "7"),  # Left
-                (130, 120, "lightgoldenrod", "8") # Top-left
+                (200, 80, "red", "1"),   # Top
+                (270, 120, "red", "2"), # Top-right
+                (300, 200, "red", "3"), # Right
+                (270, 280, "red", "4"),# Bottom-right
+                (200, 320, "red", "5"),  # Bottom
+                (130, 280, "red", "6"),  # Bottom-left
+                (100, 200, "red", "7"),  # Left
+                (130, 120, "red", "8") # Top-left
             ]
 
         # Draw the circles with updated positions and colors
@@ -303,7 +303,7 @@ class ThirdPage(ctk.CTkFrame):
         original_colour = self.get_original_color()
         
         # Toggle between red and original color for blink effect
-        new_colour = "red" if current_colour != "red" else original_colour
+        new_colour = "yellow" if current_colour != "yellow" else original_colour
         self.canvas.itemconfig(self.current_circle, fill=new_colour)
         
         self.blinking_task = self.root.after(500, self.blink)
@@ -337,7 +337,7 @@ class ThirdPage(ctk.CTkFrame):
             self.root.after_cancel(self.blinking_task)
             self.blinking_task = None
 
-        self.canvas.itemconfig(self.current_circle, fill=self.get_original_color())
+        self.canvas.itemconfig(self.current_circle, fill="lightgreen")
         self.count = (self.count+1) % len(self.circle_ids)
         self.current_circle = self.circle_ids[self.count]
         self.blink()
