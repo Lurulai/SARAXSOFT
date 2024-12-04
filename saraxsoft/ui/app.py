@@ -4,17 +4,19 @@ from __future__ import annotations
 
 import os
 import signal
-import threading
 from typing import Any, cast
 
 import customtkinter
 from PIL import ImageTk
 
+from saraxsoft.manager.serial import SerialManager
+from saraxsoft.settings import AppConfig
 from saraxsoft.ui.common.popups import Popups
 from saraxsoft.ui.navigation import NavigationFrame
+from saraxsoft.ui.state import AppState
 from saraxsoft.ui.steps.configuration import ConfigurationFrame
-from saraxsoft.ui.steps.mounting import MountingFrame
-
+from saraxsoft.ui.steps.connection import ConnectionFrame
+from saraxsoft.ui.steps.setup import SetupFrame
 from saraxsoft.utils.path_resolver import PathResolver
 
 customtkinter.set_appearance_mode("Dark")  # Modes: "System" (standard), "Dark", "Light"
@@ -42,6 +44,13 @@ class App(customtkinter.CTk):
         self.iconpath = ImageTk.PhotoImage(file=logo_image)
         self.wm_iconbitmap()
         self.iconphoto(True, self.iconpath)  # type: ignore[reportArgumentType]
+
+        # App state
+        self.app_state = AppState()
+
+        # Create serial manager
+        self._serial_manager = SerialManager(port=AppConfig._ARDUINO_PORT)
+        self._serial_manager.start()
 
         # Specify the delete window protocol with custom function/dialog
         self.protocol(
@@ -89,6 +98,10 @@ class App(customtkinter.CTk):
         """Return the coordinates to center the window."""
         return self._center(self.MAIN_WIDTH, self.MAIN_HEIGHT)
 
+    def get_serial_manager(self) -> SerialManager:
+        """Return the serial manager."""
+        return self._serial_manager
+
     def _center(self, window_width: int, window_height: int) -> tuple[float, float]:
         """Return the coordinates to center the window."""
         screen_width = self.winfo_screenwidth()
@@ -100,23 +113,17 @@ class App(customtkinter.CTk):
     def _init_frames(self) -> None:
         """Initialize the frames of the application."""
         # Create all the frames
-        self.config_frame = ConfigurationFrame(self)
-        self.mounting_frame = MountingFrame(self)
+        _connection_frame = ConnectionFrame(self, self.app_state)
+        _setup_frame = SetupFrame(self, self.app_state)
+        _config_frame = ConfigurationFrame(self, self.app_state)
 
         # Add the frames to the navigation frame
-        self.navigation_frame.add_frame("Configuration", 0, self.config_frame)
-        self.navigation_frame.add_frame("Mounting", 1, self.mounting_frame)
+        self.navigation_frame.add_frame("Connection", 0, _connection_frame)
+        self.navigation_frame.add_frame("Setup", 1, _setup_frame)
+        self.navigation_frame.add_frame("Configuration", 2, _config_frame)
 
         # Select the home frame
-        self.navigation_frame.select_frame_by_name("Configuration")
-
-        # Start the process monitor to enable/disable sync button
-        self.__sync_thread = threading.Thread(target=self._monitor_data)
-        self.__sync_thread.daemon = True
-        self.__sync_thread.start()
-
-    def _monitor_data(self) -> None:
-        """Monitoring function to enable/disable the sync button."""
+        self.navigation_frame.select_frame_by_name("Connection")
 
     def _quit_app(self, **kwargs: dict[str, Any]) -> None:
         """
@@ -131,20 +138,8 @@ class App(customtkinter.CTk):
             popup: customtkinter.CTkToplevel = cast(customtkinter.CTkToplevel, kwargs["popup"])
             popup.grab_release()
             popup.destroy()
+        # Stop the serial manager
+        self._serial_manager.stop()
+        # Destroy the main window
+        self.destroy()
         os.kill(os.getpid(), signal.SIGTERM)
-
-    def navigate_to_mounting(self, selected_config: str) -> None:
-        """
-        Navigate to the Mounting page with the selected configuration.
-
-        Parameters
-        ----------
-        selected_config : str
-            The selected configuration (e.g., "FOUR_ARMS", "SIX_ARMS").
-        """
-        print(selected_config)
-        self.selected_config = selected_config
-        self.mounting_frame.canvas.delete("all")  # Clear existing circles
-        self.mounting_frame._populate_circles(selected_config)
-        # self.mounting_frame._draw_circles()
-        self.navigation_frame.select_frame_by_name("Mounting")

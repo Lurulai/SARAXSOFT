@@ -29,3 +29,4 @@ class AppConfig:
     """Configuration for the app."""
 
     _ASSET_PATH = PathResolver.resolve_path("assets")
+    _ARDUINO_PORT = "/dev/cu.usbserial-120"

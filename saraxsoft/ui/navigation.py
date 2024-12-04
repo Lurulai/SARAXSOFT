@@ -2,28 +2,35 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import customtkinter
 from PIL import Image
 
 from saraxsoft.settings import AppConfig
 
+if TYPE_CHECKING:
+    from saraxsoft.ui.app import App
+
 
 class NavigationFrame(customtkinter.CTkFrame):
     """A custom tkinter frame that contains all the navigation buttons."""
 
-    def __init__(self, parent: customtkinter.CTk) -> None:
+    def __init__(self, parent: App) -> None:
         """
         Initialize the NavigationFrame.
 
         Parameters
         ----------
-        parent : customtkinter.CTk
+        parent : App
             The parent of the frame.
         """
         super().__init__(parent, corner_radius=0, fg_color="transparent", width=150, height=600)
 
+        self.parent = parent
+
         self.current_frame_index = 0
-        self.frame_mappping: dict[str, customtkinter.CTkFrame] = {}
+        self.frame_mapping: dict[str, customtkinter.CTkFrame] = {}
         self.frame_mapping_by_index: dict[int, str] = {}
 
         # Configure grid layout
@@ -79,7 +86,7 @@ class NavigationFrame(customtkinter.CTkFrame):
             The name of the frame to select.
         """
         # show selected frame and hide others
-        for frame_name, frame in self.frame_mappping.items():
+        for frame_name, frame in self.frame_mapping.items():
             if frame_name == name:
                 frame.grid(row=1, column=0, sticky="nsew")
                 frame.update_idletasks()  # Update the frame to get the correct size
@@ -92,6 +99,7 @@ class NavigationFrame(customtkinter.CTkFrame):
             self.back_button.grid_remove()
         else:
             self.back_button.grid(row=0, column=0, padx=20, pady=(20, 0), sticky="w")
+            self.update_idletasks()  # Update the frame to get the correct size
 
     def add_frame(self, name: str, order: int, frame: customtkinter.CTkFrame) -> None:
         """
@@ -106,7 +114,7 @@ class NavigationFrame(customtkinter.CTkFrame):
         frame : customtkinter.CTkFrame
             The frame to add to the navigation frame
         """
-        self.frame_mappping[name] = frame
+        self.frame_mapping[name] = frame
         self.frame_mapping_by_index[order] = name
         frame.grid(row=1, column=0, sticky="nsew")
         frame.grid_remove()
@@ -119,3 +127,4 @@ class NavigationFrame(customtkinter.CTkFrame):
     def _change_appearance_mode(self, new_appearance_mode: str) -> None:
         """Change the appearance mode of the app."""
         customtkinter.set_appearance_mode(new_appearance_mode)
+        self.parent.app_state.set_appearance_mode(new_appearance_mode)
