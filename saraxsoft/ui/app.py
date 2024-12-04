@@ -13,6 +13,8 @@ from PIL import ImageTk
 from saraxsoft.ui.common.popups import Popups
 from saraxsoft.ui.navigation import NavigationFrame
 from saraxsoft.ui.steps.configuration import ConfigurationFrame
+from saraxsoft.ui.steps.mounting import MountingFrame
+
 from saraxsoft.utils.path_resolver import PathResolver
 
 customtkinter.set_appearance_mode("Dark")  # Modes: "System" (standard), "Dark", "Light"
@@ -98,10 +100,12 @@ class App(customtkinter.CTk):
     def _init_frames(self) -> None:
         """Initialize the frames of the application."""
         # Create all the frames
-        _config_frame = ConfigurationFrame(self)
+        self.config_frame = ConfigurationFrame(self)
+        self.mounting_frame = MountingFrame(self)
 
         # Add the frames to the navigation frame
-        self.navigation_frame.add_frame("Configuration", 0, _config_frame)
+        self.navigation_frame.add_frame("Configuration", 0, self.config_frame)
+        self.navigation_frame.add_frame("Mounting", 1, self.mounting_frame)
 
         # Select the home frame
         self.navigation_frame.select_frame_by_name("Configuration")
@@ -128,3 +132,19 @@ class App(customtkinter.CTk):
             popup.grab_release()
             popup.destroy()
         os.kill(os.getpid(), signal.SIGTERM)
+
+    def navigate_to_mounting(self, selected_config: str) -> None:
+        """
+        Navigate to the Mounting page with the selected configuration.
+
+        Parameters
+        ----------
+        selected_config : str
+            The selected configuration (e.g., "FOUR_ARMS", "SIX_ARMS").
+        """
+        print(selected_config)
+        self.selected_config = selected_config
+        self.mounting_frame.canvas.delete("all")  # Clear existing circles
+        self.mounting_frame._populate_circles(selected_config)
+        # self.mounting_frame._draw_circles()
+        self.navigation_frame.select_frame_by_name("Mounting")

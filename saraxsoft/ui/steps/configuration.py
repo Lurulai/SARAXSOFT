@@ -9,7 +9,6 @@ from saraxsoft.settings import AppConfig
 from saraxsoft.ui.common.label_separator import LabelSeparator
 from saraxsoft.utils.enums import ConfigurationType
 
-
 class ConfigurationFrame(customtkinter.CTkFrame):
     """A custom tkinter frame that contains all the navigation buttons."""
 
@@ -100,7 +99,7 @@ class ConfigurationFrame(customtkinter.CTkFrame):
                 width=button_width,
                 image=self.config_images[config_type],
                 compound="top",
-                command=lambda config_type=config_type: self._select_config(config_type),
+                command=lambda config_type=config_type: self._on_button_click(config_type),
             )
             button.grid(row=0, column=0, sticky="ew", pady=(0, 10))
 
@@ -114,3 +113,14 @@ class ConfigurationFrame(customtkinter.CTkFrame):
             The configuration type of the drone.
         """
         print(f"Selected configuration: {config_type}")
+
+    def _on_button_click(self, config_type: ConfigurationType) -> None:
+        """
+        Handle button clicks to select a configuration and navigate to the Mounting frame.
+
+        Parameters
+        ----------
+        config_type : ConfigurationType
+            The selected configuration type of the drone.
+        """
+        self.parent.navigate_to_mounting(config_type.name) 

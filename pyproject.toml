@@ -14,7 +14,7 @@ authors = [
 ]
 dependencies = [
     "tk>=0.1.0",
-    "pillow>=11.0.0",
+    "Pillow>=11.0.0",
     "pyserial>=3.5",
     "loguru>=0.7.2",
     "customtkinter>=5.2.2",
