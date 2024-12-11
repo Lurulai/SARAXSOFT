@@ -9,9 +9,5 @@
         "**/.venv": true,
         "**/__pypackages__": true,
         "**/__pycache__": true,
-    },
-    "python.analysis.extraPaths": [
-        "__pypackages__/3.11/lib",
-        ".venv/lib/python3.11/site-packages"
-    ]
+    }
 }

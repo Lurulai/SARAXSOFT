@@ -32,7 +32,7 @@ class ConnectionFrame(customtkinter.CTkFrame):
         self.app_state: AppState = state
 
         # Register the connection observer
-        self.parent.get_serial_manager().add_observer(self._on_connection_change)
+        self.parent.get_serial_manager().add_connection_observer(self._on_connection_change)
 
         # Load images
         self.disconnected_image = customtkinter.CTkImage(

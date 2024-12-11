@@ -8,6 +8,8 @@ from typing import TYPE_CHECKING
 import customtkinter
 
 from saraxsoft.common.enums import ConfigurationType
+from saraxsoft.settings import ConstSettings
+from saraxsoft.ui.common.console import ConsoleFrame
 from saraxsoft.ui.common.label_separator import LabelSeparator
 
 if TYPE_CHECKING:
@@ -45,8 +47,15 @@ class ConfigurationFrame(customtkinter.CTkFrame):
         self.grid_columnconfigure(0, weight=1)
 
         # Configure the observer
-        self.app_state.add_observer(self.update_config)
-        self.app_state.add_observer(self.change_appearance)
+        self.app_state.add_observer(self._update_config)
+        self.app_state.add_observer(self._change_appearance)
+
+        # Register the connection observer
+        self.parent.get_serial_manager().add_connection_observer(self._on_connection_change)
+
+        # Get the serial manager
+        self.serial_manager = self.parent.get_serial_manager()
+        self.serial_manager.add_message_handler(self._log_to_console)
 
         # Create the UI
         self._create_ui()
@@ -69,19 +78,26 @@ class ConfigurationFrame(customtkinter.CTkFrame):
         self.data_frame = customtkinter.CTkFrame(self, corner_radius=0, fg_color="transparent")
         self.data_frame.grid(row=1, column=0, sticky="nsew", pady=10)
 
-        self.data_frame.grid_columnconfigure(0, weight=1)
-        self.data_frame.grid_columnconfigure(1, weight=1)
+        self.data_frame.grid_columnconfigure(0, weight=1, uniform="group1")
+        self.data_frame.grid_columnconfigure(1, weight=1, uniform="group1")
         self.data_frame.grid_rowconfigure(0, weight=1)
 
         # Canvas for drawing arms
-        self.canvas = tk.Canvas(self.data_frame, highlightthickness=0, background="#131212")
+        self.canvas = tk.Canvas(self.data_frame, highlightthickness=0, background="#131212", width=ConstSettings.MAIN_WIDTH // 2)
         self.canvas.grid(row=0, column=0, sticky="nsew", padx=10)
 
-        # Additional data
-        self.additional_data_frame = customtkinter.CTkFrame(self.data_frame, corner_radius=0, fg_color="transparent")
-        self.additional_data_frame.grid(row=0, column=1, sticky="nsew", padx=10)
+        # Log text widget
+        self.console_frame = ConsoleFrame(self.data_frame, self.app_state, width=ConstSettings.MAIN_WIDTH // 2, fg_color="transparent")
+        self.console_frame.grid(row=0, column=1, sticky="nsew", padx=10)
 
-    def update_config(self) -> None:
+    def _log_to_console(self, message: str) -> None:
+        """Update the Text widget with a new log message."""
+        # Skip empty and pong messages
+        if not message or message.lower() == "pong":
+            return
+        self.console_frame.write(message)
+
+    def _update_config(self) -> None:
         """Update the configuration drawing based on the selected setup."""
         # Cancel any existing blinking task
         if self.blinking_task is not None:
@@ -96,7 +112,7 @@ class ConfigurationFrame(customtkinter.CTkFrame):
         selected_config = self.app_state.get_selected_configuration()
         if not selected_config:
             return
-        self.description_label.configure(text=f"Selected Configuration: {selected_config.name.replace('_', '-')}")
+        self.description_label.configure(text=f"Selected Configuration: {selected_config.name.replace('_', ' ').title()}")
 
         # Map configurations to arm positions
         self.circles = self._get_circle_positions(selected_config)
@@ -109,7 +125,7 @@ class ConfigurationFrame(customtkinter.CTkFrame):
         # Draw circles on the canvas
         self._draw_circles()
 
-    def change_appearance(self) -> None:
+    def _change_appearance(self) -> None:
         """Change the appearance of the configuration frame based on the app state."""
         # Get the current appearance mode from the app state
         appearance_mode = self.app_state.get_appearance_mode()
@@ -201,6 +217,15 @@ class ConfigurationFrame(customtkinter.CTkFrame):
 
         # Start blinking the new circle
         self.blink()
+
+    def _on_connection_change(self, connected: bool) -> None:
+        """Update the UI based on the connection status."""
+        self.after(10, self._change_page, connected)
+
+    def _change_page(self, connected: bool) -> None:
+        """Change the page based on the connection status."""
+        if not connected:
+            self.parent.navigation_frame.select_frame_by_name("Connection")
 
     def _get_original_color(self) -> str:
         """Get the original color of the current circle."""

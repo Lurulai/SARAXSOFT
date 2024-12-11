@@ -35,6 +35,9 @@ class SetupFrame(customtkinter.CTkFrame):
         self.app_state = state
         self.config_map: dict[str, tuple[customtkinter.CTkLabel, customtkinter.CTkEntry | customtkinter.CTkComboBox | customtkinter.CTkCheckBox]] = {}
 
+        # Register the connection observer
+        self.parent.get_serial_manager().add_connection_observer(self._on_connection_change)
+
         # Load the images of setups
         self.config_images = {
             ConfigurationType.FOUR_ARMS: customtkinter.CTkImage(
@@ -112,6 +115,15 @@ class SetupFrame(customtkinter.CTkFrame):
                 command=lambda config_type=config_type: self._select_config(config_type),
             )
             button.grid(row=0, column=0, sticky="ew", pady=(0, 10))
+
+    def _on_connection_change(self, connected: bool) -> None:
+        """Update the UI based on the connection status."""
+        self.after(10, self._change_page, connected)
+
+    def _change_page(self, connected: bool) -> None:
+        """Change the page based on the connection status."""
+        if not connected:
+            self.parent.navigation_frame.select_frame_by_name("Connection")
 
     def _select_config(self, config_type: ConfigurationType) -> None:
         """

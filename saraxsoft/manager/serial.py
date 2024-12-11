@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import threading
 import time
+from queue import Empty, Queue
 from typing import TYPE_CHECKING
 
 import serial
@@ -13,7 +14,7 @@ if TYPE_CHECKING:
 
 
 class SerialManager:
-    """Manages the Arduino serial connection in a separate thread."""
+    """Manages the Arduino serial connection in separate threads using a publish-subscribe pattern."""
 
     def __init__(self, port: str | None = None, baudrate: int = 9600) -> None:
         """
@@ -31,14 +32,28 @@ class SerialManager:
         self.serial_connection: serial.Serial | None = None
         self.connected: bool = False
         self.running: bool = False
-        self._observers: list[Callable[[bool], None]] = []
 
-        # Threshold for state changes
-        self._connection_change_threshold: int = 3  # Number of checks before state change is confirmed
-        self._connection_change_counter: int = 0
-        self._last_known_state: bool = False
+        self._connection_observers: list[Callable[[bool], None]] = []
+        self._message_handlers: list[Callable[[str], None]] = []
 
-    def add_observer(self, callback: Callable[[bool], None]) -> None:
+        # Thread-safe queue for incoming messages
+        self._message_queue: Queue[str] = Queue()
+        # Event to signal when a PONG response is received
+        self._ping_pong_event = threading.Event()
+        # Unique identifier for ping messages
+        self._ping_id: str | None = None
+
+        # For sending commands and receiving responses
+        self._command_response_queue: Queue[str] = Queue()
+        self._command_event = threading.Event()
+        self._command_lock = threading.Lock()
+
+        # Threads
+        self.monitor_thread: threading.Thread | None = None
+        self.read_thread: threading.Thread | None = None
+        self.dispatch_thread: threading.Thread | None = None
+
+    def add_connection_observer(self, callback: Callable[[bool], None]) -> None:
         """
         Register a callback to be notified on connection changes.
 
@@ -47,76 +62,57 @@ class SerialManager:
         callback : Callable[[bool], None]
             The callback to be notified.
         """
-        self._observers.append(callback)
+        self._connection_observers.append(callback)
 
-    def _notify_observers(self, connected: bool) -> None:
+    def add_message_handler(self, handler: Callable[[str], None]) -> None:
+        """
+        Register a callback to process serial messages.
+
+        Parameters
+        ----------
+        handler : Callable[[str], None]
+            The callback to process serial messages.
+        """
+        self._message_handlers.append(handler)
+
+    def _notify_connection_observers(self, connected: bool) -> None:
         """Notify all observers of the connection status."""
-        for callback in self._observers:
+        for callback in self._connection_observers:
             callback(connected)
 
     def start(self) -> None:
-        """Start the connection thread."""
+        """Start the serial manager."""
         self.running = True
-        self.thread = threading.Thread(target=self._monitor_connection)
-        self.thread.daemon = True
-        self.thread.start()
+
+        # Start monitoring thread
+        self.monitor_thread = threading.Thread(target=self._monitor_connection, name="MonitorThread")
+        self.monitor_thread.daemon = True
+        self.monitor_thread.start()
+
+        # Start reading thread
+        self.read_thread = threading.Thread(target=self._read_serial_port, name="ReadThread")
+        self.read_thread.daemon = True
+        self.read_thread.start()
+
+        # Start dispatching thread
+        self.dispatch_thread = threading.Thread(target=self._dispatch_messages, name="DispatchThread")
+        self.dispatch_thread.daemon = True
+        self.dispatch_thread.start()
 
     def stop(self) -> None:
-        """Stop the connection thread."""
+        """Stop the serial manager."""
         self.running = False
         if self.serial_connection and self.serial_connection.is_open:
             self.serial_connection.close()
 
     def _monitor_connection(self) -> None:
-        """Monitor the serial connection."""
+        """Monitor the serial connection and handle connection logic."""
         while self.running:
-            try:
-                # Handle connection logic
-                if not self.connected:
-                    self._attempt_connection()
-                elif self.serial_connection and self.serial_connection.is_open:
-                    self._check_connection()
-                else:
-                    self._handle_disconnection()
-            except serial.SerialException:
-                self._handle_serial_exception()
-
-            # Track connection state changes
-            if self.connected != self._last_known_state:
-                # Increment counter only if state has changed
-                self._connection_change_counter += 1
-
-                # Confirm sustained change
-                if self._connection_change_counter >= self._connection_change_threshold:
-                    self._last_known_state = self.connected
-                    self._connection_change_counter = 0
-                    self._notify_observers(self.connected)
+            if not self.connected:
+                self._attempt_connection()
             else:
-                # Reset counter only if state is stable for this iteration
-                self._connection_change_counter = 0
-
+                self._check_connection()
             time.sleep(1)
-
-    def _check_connection(self) -> None:
-        """Check the connection status."""
-        if not self.serial_connection or not self.serial_connection.is_open:
-            self.connected = False
-            return
-
-        try:
-            self.serial_connection.write(b"PING 1\n")
-            self.serial_connection.flush()
-            response = self.serial_connection.readline().decode("utf-8").strip()
-            if response == "PONG":
-                self.connected = True
-            else:
-                self.connected = False
-        except serial.SerialException as e:
-            self._handle_disconnection()
-            logger.error(f"Serial error: {e}")
-        except OSError as e:
-            self._handle_disconnection()
-            logger.error(f"OS error: Bad file descriptor during serial operation: {e}")
 
     def _attempt_connection(self) -> None:
         """Attempt to establish a serial connection."""
@@ -136,33 +132,78 @@ class SerialManager:
         """Attempt to connect to a specific port."""
         logger.info(f"Attempting to connect to Arduino on {port}...")
         try:
-            self.serial_connection = serial.Serial(port, self.baudrate, timeout=3)
+            self.serial_connection = serial.Serial(port, self.baudrate, timeout=1)
             time.sleep(2)  # Wait for the Arduino to reset
-            # Read initial messages from Arduino if any
-            if self.serial_connection.in_waiting:
-                init_msg = self.serial_connection.readline().decode("utf-8").strip()
-                logger.info(f"Received on connect: {init_msg}")
-
-            logger.info(f"Connected to Arduino on {port}.")
             self.port = port
             self.connected = True
+            self._notify_connection_observers(self.connected)
+            logger.info(f"Connected to Arduino on {port}.")
         except serial.SerialException as e:
             logger.error(f"Failed to connect to Arduino on {port}: {e}")
             return False
         return True
 
-    def _handle_disconnection(self) -> None:
-        """Handle the disconnection of the serial connection."""
-        if self.serial_connection:
-            self.serial_connection.close()
-            self.serial_connection = None
-        self.connected = False
-        time.sleep(1)
-
-    def _handle_serial_exception(self) -> None:
-        """Handle exceptions that occur during serial operations."""
-        if self.connected:
+    def _check_connection(self) -> None:
+        """Check the connection status by sending a ping and waiting for a pong."""
+        if not self.serial_connection or not self.serial_connection.is_open:
             self.connected = False
+            self._notify_connection_observers(self.connected)
+            return
+
+        try:
+            self._ping_id = "PING_CHECK"
+            self._ping_pong_event.clear()
+            self.serial_connection.write(f"PING {self._ping_id}\n".encode())
+            self.serial_connection.flush()
+
+            # Wait for PONG response
+            pong_received = self._ping_pong_event.wait(timeout=3)
+            if not pong_received:
+                logger.warning("No PONG received. Connection lost.")
+                self.connected = False
+                self._notify_connection_observers(self.connected)
+                self.serial_connection.close()
+        except (serial.SerialException, OSError) as e:
+            logger.error(f"Error during connection check: {e}")
+            self.connected = False
+            self._notify_connection_observers(self.connected)
+            self.serial_connection.close()
+
+    def _read_serial_port(self) -> None:
+        """Continuously read from the serial port and enqueue messages."""
+        while self.running:
+            try:
+                if self.connected and self.serial_connection and self.serial_connection.in_waiting:
+                    line = self.serial_connection.readline().decode("utf-8").strip()
+                    self._message_queue.put(line)
+                else:
+                    time.sleep(0.01)
+            except (serial.SerialException, OSError):
+                logger.error("Error reading from serial port, device not configured or disconnected.")
+                self.connected = False
+                self._notify_connection_observers(self.connected)
+
+    def _dispatch_messages(self) -> None:
+        """Dispatch messages from the queue to registered handlers."""
+        while self.running:
+            try:
+                message = self._message_queue.get(timeout=0.1)
+                # Handle ping/pong responses
+                if message.startswith("PONG"):
+                    self._ping_pong_event.set()
+                    self._ping_id = None
+                # Handle command responses
+                elif self._command_event.is_set():
+                    pass  # Command already completed
+                elif self._command_lock.locked():
+                    self._command_response_queue.put(message)
+                    if message.startswith(("OK", "ERROR", "INPUT_STATE")):
+                        self._command_event.set()
+                # Dispatch message to handlers
+                for handler in self._message_handlers:
+                    handler(message)
+            except Empty:
+                continue
 
     def send_command(self, command: str) -> str:
         """
@@ -181,26 +222,28 @@ class SerialManager:
         if not self.connected or not self.serial_connection:
             raise serial.SerialException("Not connected to any serial device.")
 
-        try:
+        with self._command_lock:
+            self._command_event.clear()
+            self._command_response_queue = Queue()
             self.serial_connection.write((command + "\n").encode("utf-8"))
             self.serial_connection.flush()
 
-            # Read response
-            start_time = time.time()
+            # Collect responses until command is completed
             response_lines: list[str] = []
-            while time.time() - start_time < 3:  # noqa: PLR2004
-                if self.serial_connection.in_waiting:
-                    line = self.serial_connection.readline().decode("utf-8").strip()
-                    response_lines.append(line)
-                    # Break if we get an "OK" or an error message
-                    if line.startswith(("OK", "ERROR", "INPUT_STATE")) or line == "PONG":
-                        break
-                else:
-                    time.sleep(0.1)
-            if response_lines:
+            command_completed = self._command_event.wait(timeout=3)
+            while not self._command_response_queue.empty():
+                response_lines.append(self._command_response_queue.get())
+
+            if command_completed:
                 return "\n".join(response_lines)
-            logger.warning("No response received from Arduino.")
-        except serial.SerialException as e:
-            self._handle_disconnection()
-            logger.error(f"Serial error: {e}")
-        return ""
+            logger.warning("Command timed out without a response.")
+            return ""
+
+    def _handle_disconnection(self) -> None:
+        """Handle the disconnection of the serial connection."""
+        if self.serial_connection:
+            self.serial_connection.close()
+            self.serial_connection = None
+        self.connected = False
+        self._notify_connection_observers(self.connected)
+        time.sleep(1)

@@ -4,13 +4,13 @@ version = "0.1.0"
 description = "Default template for PDM package"
 authors = [
     {name = "Victoria Huisman", email = "hello.victoria@outlook.ie"},
-    {name = "Arga", email = "" },
-    {name = "Tim", email = "" },
-    {name = "Bas", email = "" },
-    {name = "Nghi", email = "" },
-    {name = "Stef", email = "" },
-    {name = "Reinoud", email = "" },
-    {name = "Mika", email = "" },
+    {name = "Arga"},
+    {name = "Tim"},
+    {name = "Bas"},
+    {name = "Nghi"},
+    {name = "Stef"},
+    {name = "Reinoud"},
+    {name = "Mika"},
 ]
 dependencies = [
     "tk>=0.1.0",
@@ -190,5 +190,5 @@ dev = [
 ]
 
 [tool.pdm.scripts]
-app = { cmd = "pdm run python -m saraxsoft.main train", help = "Run the application." }
+app = { cmd = "pdm run python -m saraxsoft.main", help = "Run the application." }
 lint = { composite = ["ruff format .", "ruff check . --fix"], help = "Format and lint the code." }

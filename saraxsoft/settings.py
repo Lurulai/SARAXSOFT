@@ -7,6 +7,11 @@ from saraxsoft.utils.path_resolver import PathResolver
 class ConstSettings:
     """Constant settings."""
 
+    MAIN_WIDTH = 820    # Beginning window width
+    MAIN_HEIGHT = 520   # Beginning window height
+    EXIT_WIDTH = 320    # Exit dialog width
+    EXIT_HEIGHT = 100   # Exit dialog height
+
     DEFAULT_TEXT_COLOR = ("#000000", "#FFFFFF")  # (Light=Black, Dark=White)
 
     DEFAULT_DESC_COLOR = ("#000000", "#FFFFFF")  # (Light=Black, Dark=White)

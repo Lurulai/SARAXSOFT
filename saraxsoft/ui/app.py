@@ -10,7 +10,7 @@ import customtkinter
 from PIL import ImageTk
 
 from saraxsoft.manager.serial import SerialManager
-from saraxsoft.settings import AppConfig
+from saraxsoft.settings import AppConfig, ConstSettings
 from saraxsoft.ui.common.popups import Popups
 from saraxsoft.ui.navigation import NavigationFrame
 from saraxsoft.ui.state import AppState
@@ -25,11 +25,6 @@ customtkinter.set_default_color_theme("dark-blue")  # Themes: "blue" (standard),
 
 class App(customtkinter.CTk):
     """Application class containing the main window and functions."""
-
-    MAIN_WIDTH = 820    # Beginning window width
-    MAIN_HEIGHT = 520   # Beginning window height
-    EXIT_WIDTH = 320    # Exit dialog width
-    EXIT_HEIGHT = 100   # Exit dialog height
 
     def __init__(self) -> None:
         """Initialize the application."""
@@ -57,8 +52,8 @@ class App(customtkinter.CTk):
             name="WM_DELETE_WINDOW",
             func=lambda: Popups.one_button_popup(
                 self,
-                (App.MAIN_WIDTH, App.MAIN_HEIGHT),
-                (App.EXIT_WIDTH, App.EXIT_HEIGHT),
+                (ConstSettings.MAIN_WIDTH, ConstSettings.MAIN_HEIGHT),
+                (ConstSettings.EXIT_WIDTH, ConstSettings.EXIT_HEIGHT),
                 "Confirm Exit",
                 "Are you sure you want to exit?",
                 "Exit",
@@ -71,8 +66,8 @@ class App(customtkinter.CTk):
         self.title("SARAX")
 
         # Placement of the window
-        center = self._center(App.MAIN_WIDTH, App.MAIN_HEIGHT)
-        self.geometry(f"{self.MAIN_WIDTH}x{self.MAIN_HEIGHT}+{int(center[0])}+{int(center[1])}")
+        center = self._center(ConstSettings.MAIN_WIDTH, ConstSettings.MAIN_HEIGHT)
+        self.geometry(f"{ConstSettings.MAIN_WIDTH}x{ConstSettings.MAIN_HEIGHT}+{int(center[0])}+{int(center[1])}")
         self.resizable(False, False)
 
         # Configure the grid layout
@@ -86,17 +81,9 @@ class App(customtkinter.CTk):
 
         self._init_frames()  # Initialize the frames of the application
 
-    def get_width(self) -> int:
-        """Return the width of the main window."""
-        return self.MAIN_WIDTH
-
-    def get_height(self) -> int:
-        """Return the height of the main window."""
-        return self.MAIN_HEIGHT
-
     def get_center(self) -> tuple[float, float]:
         """Return the coordinates to center the window."""
-        return self._center(self.MAIN_WIDTH, self.MAIN_HEIGHT)
+        return self._center(ConstSettings.MAIN_WIDTH, ConstSettings.MAIN_HEIGHT)
 
     def get_serial_manager(self) -> SerialManager:
         """Return the serial manager."""
