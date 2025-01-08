@@ -4,9 +4,20 @@ version = "0.1.0"
 description = "Default template for PDM package"
 authors = [
     {name = "Victoria Huisman", email = "hello.victoria@outlook.ie"},
+    {name = "Arga", email = "" },
+    {name = "Tim", email = "" },
+    {name = "Bas", email = "" },
+    {name = "Nghi", email = "" },
+    {name = "Stef", email = "" },
+    {name = "Reinoud", email = "" },
+    {name = "Mika", email = "" },
 ]
 dependencies = [
     "tk>=0.1.0",
+    "Pillow>=11.0.0",
+    "pyserial>=3.5",
+    "loguru>=0.7.2",
+    "customtkinter>=5.2.2",
 ]
 requires-python = "==3.11.*"
 readme = "README.md"
@@ -16,5 +27,168 @@ license = {text = "MIT"}
 [tool.pdm]
 distribution = false
 
+[tool.pdm.options]
+install = [
+    "--no-editable",
+    "--no-self",
+]
+add = [
+    "--no-editable",
+    "--no-self",
+]
+remove = [
+    "--no-editable",
+    "--no-self",
+]
+sync = [
+    "--no-editable",
+    "--no-self",
+]
+update = [
+    "--no-editable",
+    "--no-self",
+]
+
+[tool.ruff]
+preview = true
+include = [
+    "**/*.py",
+    "**/*.pyi",
+    "**/pyproject.toml",
+]
+exclude = [
+    "**/build/**",
+    "**/dist/**",
+    "**/venv/**",
+    "**/.venv/**",
+    "**/.nox/**",
+    "**/.pdm/**",
+    "**/.git/**",
+    "**/.tox/**",
+    "**/.mypy_cache/**",
+    "**/.pytest_cache/**",
+    "**/__pycache__/**",
+    "**/*test*.ipynb",
+    "**/versions/**",
+]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.ruff.lint]
+select = [
+    "F",
+    "E",
+    "W",
+    "C90",
+    "I",
+    "N",
+    "D2",
+    "D4",
+    "UP",
+    "YTT",
+    "ASYNC",
+    "ASYNC1",
+    "S",
+    "BLE",
+    "B",
+    "A",
+    "COM",
+    "CPY",
+    "C4",
+    "DTZ",
+    "T10",
+    "EM",
+    "EXE",
+    "FA",
+    "ISC",
+    "ICN",
+    "G",
+    "PIE",
+    "Q",
+    "T20",
+    "PYI",
+    "PT",
+    "RSE",
+    "RET",
+    "SLF",
+    "SLOT",
+    "SIM",
+    "TID",
+    "TCH",
+    "INT",
+    "ARG",
+    "PTH",
+    "TD",
+    "FIX",
+    "ERA",
+    "PGH",
+    "PL",
+    "TRY",
+    "FLY",
+    "NPY",
+    "AIR",
+    "PERF",
+    "FURB",
+    "LOG",
+    "RUF",
+]
+ignore = [
+    "E501",
+    "W191",
+    "B008",
+    "D401",
+    "RET503",
+    "EM101",
+    "EM102",
+    "E501",
+    "COM812",
+    "ISC001",
+    "TD003",
+    "S101",
+    "SLF001",
+    "G004",
+    "PLR0913",
+    "CPY001",
+    "PLR0917",
+    "PLR6301",
+    "S404",
+    "TRY003",
+    "RUF029",
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
+
+[tool.pyright]
+extraPaths = ["__pypackages__/3.11/lib", ".venv/lib/python3.11/site-packages"]
+diagnosticMode = "workspace"
+typeCheckingMode = "strict"
+autoImportCompletions = true
+reportUnknownMemberType = false
+reportUnknownVariableType = false
+reportPrivateUsage = false
+reportMissingTypeStubs = false
+
+[tool.mypy]
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+python_version = "3.11"
+strict = true
+show_error_codes = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+warn_unused_configs = true
+warn_return_any = true
+warn_unreachable = true
+warn_no_return = true
+files = "!.venv, !venv, !**/__pypackages__/**, !.vscode, !**/versions/**, !**/dist/**"
+
+[tool.pdm.dev-dependencies]
+dev = [
+    "ruff>=0.7.4",
+]
+
 [tool.pdm.scripts]
 app = { cmd = "pdm run python -m saraxsoft.main train", help = "Run the application." }
+lint = { composite = ["ruff format .", "ruff check . --fix"], help = "Format and lint the code." }
