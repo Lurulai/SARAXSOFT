@@ -1,0 +1,2 @@
+/usr/bin/ar qc libhidapi.a "CMakeFiles/hidapi.dir/MCP2210-Library/hid.c.o"
+/usr/bin/ranlib libhidapi.a

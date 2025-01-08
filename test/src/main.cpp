@@ -1,5 +1,6 @@
 #include <Arduino.h>
 
+
 void setup() {
     Serial.begin(9600);
     int arr[8] = {4, 5, 6, 7, 8, 9, 10, 11};
@@ -23,4 +24,6 @@ void loop() {
         delay(100);
     }
 }
+
+
 

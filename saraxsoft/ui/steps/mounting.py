@@ -8,12 +8,15 @@ from saraxsoft.settings import AppConfig # type: ignore
 from saraxsoft.ui.common.label_separator import LabelSeparator # type: ignore
 import threading
 import time
-import serial
+# import serial
 from typing import List
-
+from saraxsoft.ui.steps.mcp_py_test import MemoryController
 # Constants for Arduino connection
 arduino_port = 'COM8'  
 baud_rate = 9600
+
+EEPROM_ADDRESS_BASE = 0x0010  # Starting address for circles
+
 
 class MountingFrame(customtkinter.CTkFrame):
     """A custom tkinter frame for the Mounting page."""
@@ -28,6 +31,10 @@ class MountingFrame(customtkinter.CTkFrame):
             The parent of the frame.
         """
         super().__init__(parent, corner_radius=0, fg_color="white")
+
+        self.mcp_chip = MemoryController(serial_number="0001757257", cs_pin_number=0)
+        #self.addresses = [EEPROM_ADDRESS_BASE + i for i in range(8)]  # 0x0010, 0x0011, 0x0012, 0x0013
+        self.stop=0
         self.parent = parent
         self.stop_thread = threading.Event()
         self.circle_ids: List[int] = []
@@ -35,19 +42,18 @@ class MountingFrame(customtkinter.CTkFrame):
         self.count = 0
         self.current_circle = None
         self.blinking_task = None
+        
 
-        try:
-            self.ser = serial.Serial(arduino_port, baud_rate, timeout=1)
-            print(f"Serial object: {self.ser}")
-            time.sleep(2)  # Allow Arduino to reset
-        except serial.SerialException as e:
-            print(f"Failed to initialize serial connection: {e}")
-            self.ser = None
+        # try:
+        #     self.ser = serial.Serial(arduino_port, baud_rate, timeout=1)
+        #     print(f"Serial object: {self.ser}")
+        #     time.sleep(2)  # Allow Arduino to reset
+        # except serial.SerialException as e:
+        #     print(f"Failed to initialize serial connection: {e}")
+        #     self.ser = None
 
         self._create_ui()
-        self.check_thread = threading.Thread(target=self.check_serial)
-        self.check_thread.daemon = True
-        self.check_thread.start()
+        
 
         self.grid_rowconfigure(0, weight=0)
         self.grid_rowconfigure(1, weight=1)
@@ -77,8 +83,15 @@ class MountingFrame(customtkinter.CTkFrame):
         """
         if config == "FOUR_ARMS":
             self.circles = [(200, 100, "red", "1"), (300, 200, "red", "2"), (200, 300, "red", "3"), (100, 200, "red", "4")]
+            self.max_circles = 4
+            self.addresses = [EEPROM_ADDRESS_BASE + i for i in range(self.max_circles)]  # 0x0010, 0x0011, 0x0012, 0x0013
+            
         elif config == "FOUR_ARMS_X":
             self.circles = [(120, 120, "red", "1"), (280, 120, "red", "2"), (280, 280, "red", "3"), (120, 280, "red", "4")]
+            self.max_circles = 4
+            self.addresses = [EEPROM_ADDRESS_BASE + i for i in range(self.max_circles)]  # 0x0010, 0x0011, 0x0012, 0x0013
+            
+
         elif config == "SIX_ARMS":
             self.circles = [
                 (200, 80, "red", "1"),
@@ -88,6 +101,10 @@ class MountingFrame(customtkinter.CTkFrame):
                 (120, 260, "red", "5"),
                 (120, 140, "red", "6"),
             ]
+            self.max_circles = 6
+            self.addresses = [EEPROM_ADDRESS_BASE + i for i in range(self.max_circles)]  # 0x0010, 0x0011, 0x0012, 0x0013
+            
+
         elif config == "EIGHT_ARMS":
             self.circles = [
                 (200, 80, "red", "1"),
@@ -99,17 +116,22 @@ class MountingFrame(customtkinter.CTkFrame):
                 (100, 200, "red", "7"),
                 (130, 120, "red", "8"),
             ]
+            self.max_circles = 8
+            self.addresses = [EEPROM_ADDRESS_BASE + i for i in range(self.max_circles)]  # 0x0010, 0x0011, 0x0012, 0x0013
+            
+
         else:
             self.circles = []  # Default to an empty list if the configuration is unknown
         self._draw_circles()
+        self.check_thread = threading.Thread(target=self.check_rotation)
+        self.check_thread.daemon = True
+        self.check_thread.start()
 
     def _draw_circles(self) -> None:
         """Draw the circles on the canvas."""
         self.circle_ids = []
-
         
         for x, y, color, label in self.circles:
-            
             circle_id = self.canvas.create_oval(x - 30, y - 30, x + 30, y + 30, fill=color, outline="black", width=2)
             self.canvas.create_text(x, y, text=label, font=("Arial", 14, "bold"), fill="black")
             self.circle_ids.append(circle_id)
@@ -135,31 +157,93 @@ class MountingFrame(customtkinter.CTkFrame):
         """Return the original color of the current selected circle."""
         return self.circles[self.count][2]
 
-    def check_serial(self):
-        if self.ser is None:
-            print("Serial connection not initialized.")
-            return
+    def check_rotation(self):
+        """
+        Continuously write a value to address 0x0010 in the EEPROM, then read it back.
+        Compare the read value with self.count to decide whether to call next_circle().
+        """
 
-        while not self.stop_thread.is_set():
+        while not self.stop_thread.is_set() and self.stop == 0:
             try:
-                id_str = self.ser.readline().decode("utf-8").rstrip()
-                if id_str:
-                    print(f"Received: {id_str}")
-                else:
-                    print("No data received. Waiting...")
-                if id_str.isdigit():
-                    id = int(id_str)
-                    if (id - 4) == self.count:
-                        self.next_circle()
-            except (serial.SerialException, AttributeError) as e:
-                print(f"Serial connection lost: {e}")
-                break
-            time.sleep(1)
+                if self.count >= len(self.addresses):
+                    print("All circles have been processed.")
+                    self.show_popup()
+                    break  # All circles are done
 
-    def close_serial(self) -> None:
-        """Close the serial connection."""
-        if self.ser:
-            self.ser.close()
+                current_address = self.addresses[self.count]
+                # Define the expected value based on the circle's position (1, 0, 1, 0, ...)
+                input_value = 1 if self.count % 2 == 0 else 0
+                
+                if self.count == 2:
+                    input_value = 45
+
+                    
+
+                # # Write the value to the current EEPROM address
+                # self.data_to_write = input_value.to_bytes(1, 'big')
+                # self.mcp_chip.write_to_eeprom(address=current_address, data=self.data_to_write)
+                # print(f"Wrote value {input_value} to EEPROM address {hex(current_address)}.")
+
+                # Read back the value from EEPROM
+                data_read = self.mcp_chip.read_from_eeprom(address=current_address, length=1)
+                if not data_read:
+                    print(f"No data returned from EEPROM at address {hex(current_address)}. Waiting...")
+                    time.sleep(1)
+                    continue
+
+                id_val = int.from_bytes(data_read, 'big')
+                # print(f"Received from EEPROM at address {hex(current_address)}: {id_val}")
+
+                # Check if the read value matches the written value
+                if id_val == input_value:
+                    print(f"Correct input '{id_val}' received at address {hex(current_address)}. Next circle...")
+                    self.next_circle()
+                else:
+                    print(f"Wrong input '{input_value}' at address {hex(current_address)}. Expected '{id_val}'.")
+                    self.stop=1
+                    break
+
+                    # Optionally, decide whether to continue or break
+                    # For continuous monitoring, do not break
+
+                # # Write 1 byte (value 4) to EEPROM address 0x0010
+                # self.data_to_write = (1).to_bytes(1, 'big')
+                # self.mcp_chip.write_to_eeprom(address=0x0010, data=self.data_to_write)
+
+                # # Read 1 byte from EEPROM address 0x0010
+                # data_read = self.mcp_chip.read_from_eeprom(address=0x0010, length=1)
+                # if not data_read:
+
+                #     print("No data returned from EEPROM. Waiting...")
+                #     time.sleep(1)
+                #     continue
+
+                # # Convert the single byte to an integer
+                # id_val = int.from_bytes(data_read, 'big')
+
+                # if id_val:
+                #     print(f"Received from EEPROM: {id_val}")
+                # else:
+                #     print("EEPROM returned 0. Waiting...")
+
+                # # Compare (id_val - 1) with self.count
+                # if (id_val - 1 == self.count):
+                #     self.next_circle()
+
+            except Exception as e:
+                # If you're specifically dealing with serial exceptions, you could catch them:
+                # except (serial.SerialException, AttributeError) as e:
+                print(f"Error during EEPROM operation: {e}")
+                break
+
+        time.sleep(1)
+
+
+
+    # def close_serial(self) -> None:
+    #     """Close the serial connection."""
+    #     if self.ser:
+    #         self.ser.close()
 
     def next_circle(self) -> None:
         """Transition to the next circle."""
@@ -170,19 +254,41 @@ class MountingFrame(customtkinter.CTkFrame):
         if self.current_circle not in self.circle_ids:
             print("Current circle is invalid.")
             return
-
-        if self.count == len(self.circle_ids) - 1:
-            self.close_serial()
+        
+        # Check if this is the last circle
+        if self.count == self.max_circles - 1:
+            print("All circles have been processed.")
+            self.canvas.itemconfig(self.current_circle, fill="lightgreen")
             self.show_popup()
+            self.stop = 1  # Stop further processing
+            return  # Exit the method
+
+        # if self.count == len(self.circle_ids) - 1:
+        #     # self.close_serial()
+        #     self.show_popup()
 
         if self.blinking_task is not None:
             self.parent.after_cancel(self.blinking_task)
             self.blinking_task = None
 
         self.canvas.itemconfig(self.current_circle, fill="lightgreen")
-        self.count = (self.count + 1) % len(self.circle_ids)
+        # print(f"Circle {self.count + 1} completed.")
+        # self.count = (self.count + 1) % len(self.circle_ids)
+        # if self.count == self.max_circles:
+        #     print("All circles have been processed.")
+        #     self.show_popup()
+        #     self.stop=1
+        #     return  # All circles are done
+        # self.current_circle = self.circle_ids[self.count]
+        # self._blink()
+        # time.sleep(2)
+
+        # Move to the next circle
+        self.count += 1
         self.current_circle = self.circle_ids[self.count]
+        # print(f"Moving to circle {self.count + 1}.")
         self._blink()
+        time.sleep(4)
 
     def show_popup(self) -> None:
         """Display a popup when all circles are completed."""
@@ -195,6 +301,29 @@ class MountingFrame(customtkinter.CTkFrame):
         label = customtkinter.CTkLabel(
             popup,
             text="All arms are correctly mounted.",
+            font=("Arial", 14, "bold"),
+        )
+        label.pack(pady=30)
+
+        # Close Button
+        close_button = customtkinter.CTkButton(
+            popup,
+            text="Close",
+            command=popup.destroy,
+        )
+        close_button.pack(pady=10)
+
+    def show_popup_position(self, pos: int) -> None:
+        """Display a popup when all circles are completed."""
+        popup = customtkinter.CTkToplevel(self)
+        popup.title("Success")
+        popup.geometry("300x200")
+        popup.configure(fg_color="white")
+
+        # Popup Label
+        label = customtkinter.CTkLabel(
+            popup,
+            text=f"Wrongly mounted at position {pos}",
             font=("Arial", 14, "bold"),
         )
         label.pack(pady=30)

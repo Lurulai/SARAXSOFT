@@ -1,0 +1,5 @@
+/mnt/e/python/SARAXSOFT/mcp_test/cmake-build-wsl-clang/CMakeFiles/mcp_test.dir
+/mnt/e/python/SARAXSOFT/mcp_test/cmake-build-wsl-clang/CMakeFiles/hidapi.dir
+/mnt/e/python/SARAXSOFT/mcp_test/cmake-build-wsl-clang/CMakeFiles/MCP2210.dir
+/mnt/e/python/SARAXSOFT/mcp_test/cmake-build-wsl-clang/CMakeFiles/edit_cache.dir
+/mnt/e/python/SARAXSOFT/mcp_test/cmake-build-wsl-clang/CMakeFiles/rebuild_cache.dir

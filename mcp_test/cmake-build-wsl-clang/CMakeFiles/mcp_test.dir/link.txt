@@ -1,0 +1,1 @@
+/usr/bin/clang++ -g CMakeFiles/mcp_test.dir/main.cpp.o -o mcp_test   -L/usr/lib/llvm-12/lib  libMCP2210.a libhidapi.a -ludev 

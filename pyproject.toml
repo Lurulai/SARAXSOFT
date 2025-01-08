@@ -18,6 +18,7 @@ dependencies = [
     "pyserial>=3.5",
     "loguru>=0.7.2",
     "customtkinter>=5.2.2",
+    "mcp2210-python>=1.0.8",
 ]
 requires-python = "==3.11.*"
 readme = "README.md"

@@ -1,0 +1,78 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"jsonFile" : "directory-.-Debug-f5ebdc15457944623624.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.23"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "mcp_test",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "MCP2210::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-MCP2210-Debug-761ef312806fdc3af62e.json",
+					"name" : "MCP2210",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "hidapi::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-hidapi-Debug-5ace2d8dae1febd44c15.json",
+					"name" : "hidapi",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "mcp_test::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-mcp_test-Debug-830288b566193c05693a.json",
+					"name" : "mcp_test",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/mnt/e/python/SARAXSOFT/mcp_test/cmake-build-wsl-gcc",
+		"source" : "/mnt/e/python/SARAXSOFT/mcp_test"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 6
+	}
+}

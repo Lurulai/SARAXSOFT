@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6"/>
+	<Project>
+		<Option title="mcp_test"/>
+		<Option makefile_is_custom="1"/>
+		<Option compiler="clang"/>
+		<Option virtualFolders="CMake Files\;"/>
+		<Build>
+			<Target title="all">
+				<Option working_dir="/mnt/e/python/SARAXSOFT/mcp_test/cmake-build-wsl-clang"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j8 -f &quot;/mnt/e/python/SARAXSOFT/mcp_test/cmake-build-wsl-clang/Makefile&quot;  VERBOSE=1 all"/>
+					<CompileFile command="/usr/bin/gmake -j8 -f &quot;/mnt/e/python/SARAXSOFT/mcp_test/cmake-build-wsl-clang/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j8 -f &quot;/mnt/e/python/SARAXSOFT/mcp_test/cmake-build-wsl-clang/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j8 -f &quot;/mnt/e/python/SARAXSOFT/mcp_test/cmake-build-wsl-clang/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="mcp_test">
+				<Option output="/mnt/e/python/SARAXSOFT/mcp_test/cmake-build-wsl-clang/mcp_test" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/mnt/e/python/SARAXSOFT/mcp_test/cmake-build-wsl-clang"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="clang"/>
+				<Compiler>
+					<Add directory="/mnt/e/python/SARAXSOFT/mcp_test/MCP2210-Library"/>
+					<Add directory="/usr/bin/../lib/gcc/x86_64-linux-gnu/12/../../../../include/c++/12"/>
+					<Add directory="/usr/bin/../lib/gcc/x86_64-linux-gnu/12/../../../../include/x86_64-linux-gnu/c++/12"/>
+					<Add directory="/usr/bin/../lib/gcc/x86_64-linux-gnu/12/../../../../include/c++/12/backward"/>
+					<Add directory="/usr/lib/llvm-14/lib/clang/14.0.0/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+					<Add directory="/usr/lib/llvm-12/lib/clang/12.0.1/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j8 -f &quot;/mnt/e/python/SARAXSOFT/mcp_test/cmake-build-wsl-clang/Makefile&quot;  VERBOSE=1 mcp_test"/>
+					<CompileFile command="/usr/bin/gmake -j8 -f &quot;/mnt/e/python/SARAXSOFT/mcp_test/cmake-build-wsl-clang/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j8 -f &quot;/mnt/e/python/SARAXSOFT/mcp_test/cmake-build-wsl-clang/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j8 -f &quot;/mnt/e/python/SARAXSOFT/mcp_test/cmake-build-wsl-clang/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="mcp_test/fast">
+				<Option output="/mnt/e/python/SARAXSOFT/mcp_test/cmake-build-wsl-clang/mcp_test" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/mnt/e/python/SARAXSOFT/mcp_test/cmake-build-wsl-clang"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="clang"/>
+				<Compiler>
+					<Add directory="/mnt/e/python/SARAXSOFT/mcp_test/MCP2210-Library"/>
+					<Add directory="/usr/bin/../lib/gcc/x86_64-linux-gnu/12/../../../../include/c++/12"/>
+					<Add directory="/usr/bin/../lib/gcc/x86_64-linux-gnu/12/../../../../include/x86_64-linux-gnu/c++/12"/>
+					<Add directory="/usr/bin/../lib/gcc/x86_64-linux-gnu/12/../../../../include/c++/12/backward"/>
+					<Add directory="/usr/lib/llvm-14/lib/clang/14.0.0/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+					<Add directory="/usr/lib/llvm-12/lib/clang/12.0.1/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j8 -f &quot;/mnt/e/python/SARAXSOFT/mcp_test/cmake-build-wsl-clang/Makefile&quot;  VERBOSE=1 mcp_test/fast"/>
+					<CompileFile command="/usr/bin/gmake -j8 -f &quot;/mnt/e/python/SARAXSOFT/mcp_test/cmake-build-wsl-clang/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j8 -f &quot;/mnt/e/python/SARAXSOFT/mcp_test/cmake-build-wsl-clang/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j8 -f &quot;/mnt/e/python/SARAXSOFT/mcp_test/cmake-build-wsl-clang/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="hidapi">
+				<Option output="/mnt/e/python/SARAXSOFT/mcp_test/cmake-build-wsl-clang/libhidapi.a" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/mnt/e/python/SARAXSOFT/mcp_test/cmake-build-wsl-clang"/>
+				<Option object_output="./"/>
+				<Option type="2"/>
+				<Option compiler="clang"/>
+				<Compiler>
+					<Add directory="/usr/bin/../lib/gcc/x86_64-linux-gnu/12/../../../../include/c++/12"/>
+					<Add directory="/usr/bin/../lib/gcc/x86_64-linux-gnu/12/../../../../include/x86_64-linux-gnu/c++/12"/>
+					<Add directory="/usr/bin/../lib/gcc/x86_64-linux-gnu/12/../../../../include/c++/12/backward"/>
+					<Add directory="/usr/lib/llvm-14/lib/clang/14.0.0/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+					<Add directory="/usr/lib/llvm-12/lib/clang/12.0.1/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j8 -f &quot;/mnt/e/python/SARAXSOFT/mcp_test/cmake-build-wsl-clang/Makefile&quot;  VERBOSE=1 hidapi"/>
+					<CompileFile command="/usr/bin/gmake -j8 -f &quot;/mnt/e/python/SARAXSOFT/mcp_test/cmake-build-wsl-clang/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j8 -f &quot;/mnt/e/python/SARAXSOFT/mcp_test/cmake-build-wsl-clang/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j8 -f &quot;/mnt/e/python/SARAXSOFT/mcp_test/cmake-build-wsl-clang/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="hidapi/fast">
+				<Option output="/mnt/e/python/SARAXSOFT/mcp_test/cmake-build-wsl-clang/libhidapi.a" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/mnt/e/python/SARAXSOFT/mcp_test/cmake-build-wsl-clang"/>
+				<Option object_output="./"/>
+				<Option type="2"/>
+				<Option compiler="clang"/>
+				<Compiler>
+					<Add directory="/usr/bin/../lib/gcc/x86_64-linux-gnu/12/../../../../include/c++/12"/>
+					<Add directory="/usr/bin/../lib/gcc/x86_64-linux-gnu/12/../../../../include/x86_64-linux-gnu/c++/12"/>
+					<Add directory="/usr/bin/../lib/gcc/x86_64-linux-gnu/12/../../../../include/c++/12/backward"/>
+					<Add directory="/usr/lib/llvm-14/lib/clang/14.0.0/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+					<Add directory="/usr/lib/llvm-12/lib/clang/12.0.1/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j8 -f &quot;/mnt/e/python/SARAXSOFT/mcp_test/cmake-build-wsl-clang/Makefile&quot;  VERBOSE=1 hidapi/fast"/>
+					<CompileFile command="/usr/bin/gmake -j8 -f &quot;/mnt/e/python/SARAXSOFT/mcp_test/cmake-build-wsl-clang/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j8 -f &quot;/mnt/e/python/SARAXSOFT/mcp_test/cmake-build-wsl-clang/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j8 -f &quot;/mnt/e/python/SARAXSOFT/mcp_test/cmake-build-wsl-clang/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="MCP2210">
+				<Option output="/mnt/e/python/SARAXSOFT/mcp_test/cmake-build-wsl-clang/libMCP2210.a" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/mnt/e/python/SARAXSOFT/mcp_test/cmake-build-wsl-clang"/>
+				<Option object_output="./"/>
+				<Option type="2"/>
+				<Option compiler="clang"/>
+				<Compiler>
+					<Add directory="/usr/bin/../lib/gcc/x86_64-linux-gnu/12/../../../../include/c++/12"/>
+					<Add directory="/usr/bin/../lib/gcc/x86_64-linux-gnu/12/../../../../include/x86_64-linux-gnu/c++/12"/>
+					<Add directory="/usr/bin/../lib/gcc/x86_64-linux-gnu/12/../../../../include/c++/12/backward"/>
+					<Add directory="/usr/lib/llvm-14/lib/clang/14.0.0/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+					<Add directory="/usr/lib/llvm-12/lib/clang/12.0.1/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j8 -f &quot;/mnt/e/python/SARAXSOFT/mcp_test/cmake-build-wsl-clang/Makefile&quot;  VERBOSE=1 MCP2210"/>
+					<CompileFile command="/usr/bin/gmake -j8 -f &quot;/mnt/e/python/SARAXSOFT/mcp_test/cmake-build-wsl-clang/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j8 -f &quot;/mnt/e/python/SARAXSOFT/mcp_test/cmake-build-wsl-clang/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j8 -f &quot;/mnt/e/python/SARAXSOFT/mcp_test/cmake-build-wsl-clang/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="MCP2210/fast">
+				<Option output="/mnt/e/python/SARAXSOFT/mcp_test/cmake-build-wsl-clang/libMCP2210.a" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/mnt/e/python/SARAXSOFT/mcp_test/cmake-build-wsl-clang"/>
+				<Option object_output="./"/>
+				<Option type="2"/>
+				<Option compiler="clang"/>
+				<Compiler>
+					<Add directory="/usr/bin/../lib/gcc/x86_64-linux-gnu/12/../../../../include/c++/12"/>
+					<Add directory="/usr/bin/../lib/gcc/x86_64-linux-gnu/12/../../../../include/x86_64-linux-gnu/c++/12"/>
+					<Add directory="/usr/bin/../lib/gcc/x86_64-linux-gnu/12/../../../../include/c++/12/backward"/>
+					<Add directory="/usr/lib/llvm-14/lib/clang/14.0.0/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+					<Add directory="/usr/lib/llvm-12/lib/clang/12.0.1/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j8 -f &quot;/mnt/e/python/SARAXSOFT/mcp_test/cmake-build-wsl-clang/Makefile&quot;  VERBOSE=1 MCP2210/fast"/>
+					<CompileFile command="/usr/bin/gmake -j8 -f &quot;/mnt/e/python/SARAXSOFT/mcp_test/cmake-build-wsl-clang/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j8 -f &quot;/mnt/e/python/SARAXSOFT/mcp_test/cmake-build-wsl-clang/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j8 -f &quot;/mnt/e/python/SARAXSOFT/mcp_test/cmake-build-wsl-clang/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="edit_cache">
+				<Option working_dir="/mnt/e/python/SARAXSOFT/mcp_test/cmake-build-wsl-clang"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j8 -f &quot;/mnt/e/python/SARAXSOFT/mcp_test/cmake-build-wsl-clang/Makefile&quot;  VERBOSE=1 edit_cache"/>
+					<CompileFile command="/usr/bin/gmake -j8 -f &quot;/mnt/e/python/SARAXSOFT/mcp_test/cmake-build-wsl-clang/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j8 -f &quot;/mnt/e/python/SARAXSOFT/mcp_test/cmake-build-wsl-clang/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j8 -f &quot;/mnt/e/python/SARAXSOFT/mcp_test/cmake-build-wsl-clang/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="rebuild_cache">
+				<Option working_dir="/mnt/e/python/SARAXSOFT/mcp_test/cmake-build-wsl-clang"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j8 -f &quot;/mnt/e/python/SARAXSOFT/mcp_test/cmake-build-wsl-clang/Makefile&quot;  VERBOSE=1 rebuild_cache"/>
+					<CompileFile command="/usr/bin/gmake -j8 -f &quot;/mnt/e/python/SARAXSOFT/mcp_test/cmake-build-wsl-clang/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j8 -f &quot;/mnt/e/python/SARAXSOFT/mcp_test/cmake-build-wsl-clang/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j8 -f &quot;/mnt/e/python/SARAXSOFT/mcp_test/cmake-build-wsl-clang/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+		</Build>
+		<Unit filename="/mnt/e/python/SARAXSOFT/mcp_test/MCP2210-Library/hid.c">
+			<Option target="hidapi"/>
+		</Unit>
+		<Unit filename="/mnt/e/python/SARAXSOFT/mcp_test/MCP2210-Library/mcp2210.cpp">
+			<Option target="MCP2210"/>
+		</Unit>
+		<Unit filename="/mnt/e/python/SARAXSOFT/mcp_test/MCP2210-Library/mcp2210.h">
+			<Option target="MCP2210"/>
+		</Unit>
+		<Unit filename="/mnt/e/python/SARAXSOFT/mcp_test/main.cpp">
+			<Option target="mcp_test"/>
+		</Unit>
+		<Unit filename="/mnt/e/python/SARAXSOFT/mcp_test/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\"/>
+		</Unit>
+	</Project>
+</CodeBlocks_project_file>

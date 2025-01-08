@@ -1,0 +1,2 @@
+/usr/bin/ar qc libMCP2210.a "CMakeFiles/MCP2210.dir/MCP2210-Library/mcp2210.cpp.o"
+/usr/bin/ranlib libMCP2210.a
