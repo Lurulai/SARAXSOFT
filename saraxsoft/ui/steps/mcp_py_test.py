@@ -13,12 +13,19 @@ class MemoryController:
                          last_data_byte_to_cs=0,
                          delay_between_bytes=0)
         
-        self.mcp.set_gpio_designation(self.cs_pin_number, Mcp2210GpioDesignation.CHIP_SELECT)
+        self.mcp.set_gpio_designation(0, Mcp2210GpioDesignation.CHIP_SELECT)
         # set all pins as GPIO
         for i in range(1,9):
             self.mcp.set_gpio_designation(i, Mcp2210GpioDesignation.GPIO)
-            self.mcp.set_gpio_direction(i, Mcp2210GpioDirection.OUTPUT)
-        # self.mcp.set_gpio_output_value(1, False)
+
+    def select_pin(self, cs_pin : int):
+        self.mcp.set_gpio_designation(cs_pin, Mcp2210GpioDesignation.CHIP_SELECT)
+        self.cs_pin_number = cs_pin
+        pins =  [ 0,1,2,3]
+        for pin in pins:
+            if pin != cs_pin:
+                self.mcp.set_gpio_designation(pin, Mcp2210GpioDesignation.GPIO)
+
                 
     def write_to_eeprom(self, address: int, data: bytes):
         write_enable_command = b'\x06'  # Write enable opcode
