@@ -177,34 +177,34 @@ class MountingFrame(customtkinter.CTkFrame):
                 # if self.count == 2:
                 #     input_value = 45
 
-                # Write the value to the current EEPROM address
+                #Write the value to the current EEPROM address
                 self.data_to_write = (1).to_bytes(1, 'big')
-                self.mcp_chip.write_to_eeprom(address=EEPROM_ADDRESS_BASE, data=self.data_to_write)
-                print(f"Wrote value {self.data_to_write} to EEPROM address {hex(current_address)}.")
-                data_read = self.mcp_chip.read_from_eeprom(address=EEPROM_ADDRESS_BASE, length=1)
-                print(f"Write value {int.from_bytes(data_read, 'big')}")
+                # self.mcp_chip.write_to_eeprom(address=EEPROM_ADDRESS_BASE, data=self.data_to_write)
+                # print(f"Wrote value {self.data_to_write} to EEPROM address {hex(current_address)}.")
+                # data_read = self.mcp_chip.read_from_eeprom(address=EEPROM_ADDRESS_BASE, length=1)
+                # print(f"Read value {int.from_bytes(data_read, 'big')}")
 
-                self.mcp_chip.select_pin(1)
-                self.data_to_write = (0).to_bytes(1, 'big')
-                self.mcp_chip.write_to_eeprom(address=EEPROM_ADDRESS_BASE, data=self.data_to_write)
-                print(f"Wrote value {input_value} to EEPROM address {hex(current_address)}.")
-                data_read = self.mcp_chip.read_from_eeprom(address=EEPROM_ADDRESS_BASE, length=1)
-                print(f"Write value {int.from_bytes(data_read, 'big')}")
+                # self.mcp_chip.select_pin(1)
+                # self.data_to_write = (0).to_bytes(1, 'big')
+                # self.mcp_chip.write_to_eeprom(address=EEPROM_ADDRESS_BASE, data=self.data_to_write)
+                # print(f"Wrote value {self.data_to_write} to EEPROM address {hex(current_address)}.")
+                # data_read = self.mcp_chip.read_from_eeprom(address=EEPROM_ADDRESS_BASE, length=1)
+                # print(f"Read value {int.from_bytes(data_read, 'big')}")
 
-                self.mcp_chip.select_pin(2)
-                self.data_to_write = (1).to_bytes(1, 'big')
-                self.mcp_chip.write_to_eeprom(address=EEPROM_ADDRESS_BASE, data=self.data_to_write)
-                print(f"Wrote value {input_value} to EEPROM address {hex(current_address)}.")
-                data_read = self.mcp_chip.read_from_eeprom(address=EEPROM_ADDRESS_BASE, length=1)
-                print(f"Write value {int.from_bytes(data_read, 'big')}")
+                # self.mcp_chip.select_pin(2)
+                # self.data_to_write = (1).to_bytes(1, 'big')
+                # self.mcp_chip.write_to_eeprom(address=EEPROM_ADDRESS_BASE, data=self.data_to_write)
+                # print(f"Wrote value {self.data_to_write} to EEPROM address {hex(current_address)}.")
+                # data_read = self.mcp_chip.read_from_eeprom(address=EEPROM_ADDRESS_BASE, length=1)
+                # print(f"Read value {int.from_bytes(data_read, 'big')}")
 
 
-                self.mcp_chip.select_pin(3)
-                self.data_to_write = (0).to_bytes(1, 'big')
-                self.mcp_chip.write_to_eeprom(address=EEPROM_ADDRESS_BASE, data=self.data_to_write)
-                print(f"Wrote value {input_value} to EEPROM address {hex(current_address)}.")
-                data_read = self.mcp_chip.read_from_eeprom(address=EEPROM_ADDRESS_BASE, length=1)
-                print(f"Write value {int.from_bytes(data_read, 'big')}")
+                # self.mcp_chip.select_pin(3)
+                # self.data_to_write = (0).to_bytes(1, 'big')
+                # self.mcp_chip.write_to_eeprom(address=EEPROM_ADDRESS_BASE, data=self.data_to_write)
+                # print(f"Wrote value {self.data_to_write} to EEPROM address {hex(current_address)}.")
+                # data_read = self.mcp_chip.read_from_eeprom(address=EEPROM_ADDRESS_BASE, length=1)
+                # print(f"Read value {int.from_bytes(data_read, 'big')}")
 
                 
                 # Read back the value from EEPROM
@@ -223,7 +223,7 @@ class MountingFrame(customtkinter.CTkFrame):
                     print(f"Correct input '{id_val}' received at address {hex(current_address)}. Next circle...")
                     self.next_circle()
                 else:
-                    print(f"Wrong input '{input_value}' at address {hex(current_address)}. Expected '{id_val}'.")
+                    print(f"Wrong input '{id_val}' at address {hex(current_address)}. Expected '{input_value[self.count]}'.")
                     self.stop=1
                     break
 
