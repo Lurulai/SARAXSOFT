@@ -18,6 +18,13 @@ class MemoryController:
         for i in range(1,9):
             self.mcp.set_gpio_designation(i, Mcp2210GpioDesignation.GPIO)
 
+    def wait_for_write_completion(self):
+        status_command = b'\x05'  # Status register read opcode (commonly used)
+        while True:
+            status_response = self.mcp.spi_exchange(status_command + b'\x00', self.cs_pin_number)
+            if not (status_response[1] & 0x01):  # Assuming bit 0 is Write-In-Progress bit
+                break
+
     def select_pin(self, cs_pin : int):
         self.mcp.set_gpio_designation(cs_pin, Mcp2210GpioDesignation.CHIP_SELECT)
         self.cs_pin_number = cs_pin

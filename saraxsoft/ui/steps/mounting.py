@@ -8,6 +8,8 @@ from saraxsoft.settings import AppConfig # type: ignore
 from saraxsoft.ui.common.label_separator import LabelSeparator # type: ignore
 import threading
 import time
+import sys
+import os
 # import serial
 from typing import List
 from saraxsoft.ui.steps.mcp_py_test import MemoryController
@@ -163,23 +165,27 @@ class MountingFrame(customtkinter.CTkFrame):
         Compare the read value with self.count to decide whether to call next_circle().
         """
 
-        while not self.stop_thread.is_set() and self.stop == 0:
+        while not self.stop_thread.is_set() and self.stop == 0 and self.count <= 3:
             try:
-                if self.count >= len(self.addresses):
+                if self.count == 4:
                     print("All circles have been processed.")
+                    self.canvas.itemconfig(self.current_circle, fill="lightgreen")
                     self.show_popup()
-                    break  # All circles are done
+                    self.stop = 1  # Stop further processing
+                    break  # Exit the method
 
-                current_address = self.addresses[self.count]
+                current_address = EEPROM_ADDRESS_BASE
                 # Define the expected value based on the circle's position (1, 0, 1, 0, ...)
                 input_value = [1,0,1,0]
                 
                 # if self.count == 2:
                 #     input_value = 45
 
-                #Write the value to the current EEPROM address
-                self.data_to_write = (1).to_bytes(1, 'big')
+                # # Write the value to the current EEPROM address
+                # self.data_to_write = (1).to_bytes(1, 'big')
                 # self.mcp_chip.write_to_eeprom(address=EEPROM_ADDRESS_BASE, data=self.data_to_write)
+                # self.mcp_chip.wait_for_write_completion()
+
                 # print(f"Wrote value {self.data_to_write} to EEPROM address {hex(current_address)}.")
                 # data_read = self.mcp_chip.read_from_eeprom(address=EEPROM_ADDRESS_BASE, length=1)
                 # print(f"Read value {int.from_bytes(data_read, 'big')}")
@@ -187,6 +193,7 @@ class MountingFrame(customtkinter.CTkFrame):
                 # self.mcp_chip.select_pin(1)
                 # self.data_to_write = (0).to_bytes(1, 'big')
                 # self.mcp_chip.write_to_eeprom(address=EEPROM_ADDRESS_BASE, data=self.data_to_write)
+                # self.mcp_chip.wait_for_write_completion()
                 # print(f"Wrote value {self.data_to_write} to EEPROM address {hex(current_address)}.")
                 # data_read = self.mcp_chip.read_from_eeprom(address=EEPROM_ADDRESS_BASE, length=1)
                 # print(f"Read value {int.from_bytes(data_read, 'big')}")
@@ -194,6 +201,7 @@ class MountingFrame(customtkinter.CTkFrame):
                 # self.mcp_chip.select_pin(2)
                 # self.data_to_write = (1).to_bytes(1, 'big')
                 # self.mcp_chip.write_to_eeprom(address=EEPROM_ADDRESS_BASE, data=self.data_to_write)
+                # self.mcp_chip.wait_for_write_completion()
                 # print(f"Wrote value {self.data_to_write} to EEPROM address {hex(current_address)}.")
                 # data_read = self.mcp_chip.read_from_eeprom(address=EEPROM_ADDRESS_BASE, length=1)
                 # print(f"Read value {int.from_bytes(data_read, 'big')}")
@@ -202,6 +210,7 @@ class MountingFrame(customtkinter.CTkFrame):
                 # self.mcp_chip.select_pin(3)
                 # self.data_to_write = (0).to_bytes(1, 'big')
                 # self.mcp_chip.write_to_eeprom(address=EEPROM_ADDRESS_BASE, data=self.data_to_write)
+                # self.mcp_chip.wait_for_write_completion()
                 # print(f"Wrote value {self.data_to_write} to EEPROM address {hex(current_address)}.")
                 # data_read = self.mcp_chip.read_from_eeprom(address=EEPROM_ADDRESS_BASE, length=1)
                 # print(f"Read value {int.from_bytes(data_read, 'big')}")
@@ -279,13 +288,7 @@ class MountingFrame(customtkinter.CTkFrame):
             print("Current circle is invalid.")
             return
         
-        # Check if this is the last circle
-        if self.count == self.max_circles - 1:
-            print("All circles have been processed.")
-            self.canvas.itemconfig(self.current_circle, fill="lightgreen")
-            self.show_popup()
-            self.stop = 1  # Stop further processing
-            return  # Exit the method
+        
 
         # if self.count == len(self.circle_ids) - 1:
         #     # self.close_serial()
@@ -309,17 +312,40 @@ class MountingFrame(customtkinter.CTkFrame):
 
         # Move to the next circle
         self.count += 1
+        # Check if this is the last circle
+        if self.count == self.max_circles:
+            print("All circles have been processed.")
+            self.canvas.itemconfig(self.current_circle, fill="lightgreen")
+            self.show_popup()
+            self.stop = 1  # Stop further processing
+            return  # Exit the method
         self.current_circle = self.circle_ids[self.count]
         # print(f"Moving to circle {self.count + 1}.")
         self._blink()
         time.sleep(4)
 
+    def center(self, window_width: int, window_height: int) -> tuple[float, float]:
+        """Return the coordinates to center the window."""
+        screen_width = self.winfo_screenwidth()
+        screen_height = self.winfo_screenheight()
+        x = (screen_width / 2) - (window_width / 2)
+        y = (screen_height / 2) - (window_height / 2)
+        return (x, y)
+    
     def show_popup(self) -> None:
         """Display a popup when all circles are completed."""
         popup = customtkinter.CTkToplevel(self)
         popup.title("Success")
-        popup.geometry("300x200")
+        # popup.geometry("300x200")
         popup.configure(fg_color="white")
+
+        center = self.center(window_width=330, window_height=245)
+        popup.geometry(f"{300}x{200}+{int(center[0])}+{int(center[1])}")
+
+        # Keep the popup on top
+        popup.attributes("-topmost", True)
+        popup.focus_force()  # Focus on the popup window
+        
 
         # Popup Label
         label = customtkinter.CTkLabel(
@@ -329,33 +355,19 @@ class MountingFrame(customtkinter.CTkFrame):
         )
         label.pack(pady=30)
 
-        # Close Button
-        close_button = customtkinter.CTkButton(
-            popup,
-            text="Close",
-            command=popup.destroy,
-        )
-        close_button.pack(pady=10)
-
-    def show_popup_position(self, pos: int) -> None:
-        """Display a popup when all circles are completed."""
-        popup = customtkinter.CTkToplevel(self)
-        popup.title("Success")
-        popup.geometry("300x200")
-        popup.configure(fg_color="white")
-
-        # Popup Label
-        label = customtkinter.CTkLabel(
-            popup,
-            text=f"Wrongly mounted at position {pos}",
-            font=("Arial", 14, "bold"),
-        )
-        label.pack(pady=30)
+        def close_all():
+            popup.destroy()  # Close the popup
+            self.quit()      # Stop the main event loop
+            self.destroy()   # Destroy the main window
 
         # Close Button
         close_button = customtkinter.CTkButton(
             popup,
             text="Close",
-            command=popup.destroy,
+            command=close_all,
         )
         close_button.pack(pady=10)
+
+
+
+
