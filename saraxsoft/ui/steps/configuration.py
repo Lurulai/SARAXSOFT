@@ -36,10 +36,15 @@ class ConfigurationFrame(customtkinter.CTkFrame):
         self.app_state: AppState = state
 
         # Keep track of circles and their IDs
-        self.circles = []
+        self.circles: list[tuple[int, int, str, str]] = []
         self.circle_ids: list[int] = []
         self.current_circle_index = 0
+        self.pin_mapping = {}
+        self.expected_values = {}
+
+        # Keep track of the tasks
         self.blinking_task = None
+        self.auto_step_task = None
 
         # Configure the grid layout
         self.grid_rowconfigure(0, weight=0)
@@ -51,11 +56,11 @@ class ConfigurationFrame(customtkinter.CTkFrame):
         self.app_state.add_observer(self._change_appearance)
 
         # Register the connection observer
-        self.parent.get_serial_manager().add_connection_observer(self._on_connection_change)
+        self.parent.get_comm_manager().add_connection_observer(self._on_connection_change)
 
-        # Get the serial manager
-        self.serial_manager = self.parent.get_serial_manager()
-        self.serial_manager.add_message_handler(self._log_to_console)
+        # Get the comm manager
+        self.comm_manager = self.parent.get_comm_manager()
+        self.comm_manager.add_command_handler(self._log_to_console)
 
         # Create the UI
         self._create_ui()
@@ -103,6 +108,9 @@ class ConfigurationFrame(customtkinter.CTkFrame):
         if self.blinking_task is not None:
             self.after_cancel(self.blinking_task)
             self.blinking_task = None
+        if self.auto_step_task is not None:
+            self.after_cancel(self.auto_step_task)
+            self.auto_step_task = None
 
         # Clear existing canvas
         self.canvas.delete("all")
@@ -124,6 +132,17 @@ class ConfigurationFrame(customtkinter.CTkFrame):
 
         # Draw circles on the canvas
         self._draw_circles()
+
+        # Create pin mapping
+        self.pin_mapping = {i: i for i in range(len(self.circles))}
+        self.expected_device_values: list[int] = [1, 0] * (len(self.circles) // 2)
+        self.comm_manager.set_connected_device_lines(len(self.circles))
+
+        # Start auto-stepping through the circles
+        if self.circle_ids:
+            self.current_circle_index = 0
+            self._start_blink()
+            self._auto_step()
 
     def _change_appearance(self) -> None:
         """Change the appearance of the configuration frame based on the app state."""
@@ -170,7 +189,6 @@ class ConfigurationFrame(customtkinter.CTkFrame):
                 (100, 200, "lightgray", "7"),  # Left
                 (130, 120, "lightgoldenrod", "8"),  # Top-left
             ]
-        return []
 
     def _draw_circles(self) -> None:
         """Draw circles on the canvas based on the configuration."""
@@ -181,42 +199,33 @@ class ConfigurationFrame(customtkinter.CTkFrame):
             self.canvas.create_text(x, y, text=label, font=("Arial", 12), fill="black")
             self.circle_ids.append(circle_id)
 
-        # Start blinking the first circle
-        if self.circle_ids:
-            self.current_circle_index = 0
-            self.blink()
+    def _start_blink(self) -> None:
+        """Start blinking the circle at current_circle_index."""
+        if self.blinking_task is None:
+            self._blink_tick()
 
-    def blink(self) -> None:
-        """Blink the current circle to guide the user."""
+    def _blink_tick(self) -> None:
         if not self.circle_ids:
             return
 
-        current_circle = self.circle_ids[self.current_circle_index]
-        current_color = self.canvas.itemcget(current_circle, "fill")
+        # Toggle color between red and original
+        circle_id = self.circle_ids[self.current_circle_index]
+        current_color = self.canvas.itemcget(circle_id, "fill")
         original_color = self._get_original_color()
 
-        # Toggle between red and the original color
-        new_color = "red" if current_color != "red" else original_color
-        self.canvas.itemconfig(current_circle, fill=new_color)
+        if current_color != "red":
+            self.canvas.itemconfig(circle_id, fill="red")
+        else:
+            self.canvas.itemconfig(circle_id, fill=original_color)
 
-        # Schedule the next blink
-        self.blinking_task = self.after(500, self.blink)
+        self.blinking_task = self.after(500, self._blink_tick)
 
-    def next_circle(self) -> None:
-        """Move to the next circle and stop blinking the current one."""
-        if self.blinking_task is not None:
-            self.after_cancel(self.blinking_task)
-            self.blinking_task = None
-
-        # Reset the current circle's color
-        current_circle = self.circle_ids[self.current_circle_index]
-        self.canvas.itemconfig(current_circle, fill=self._get_original_color())
-
-        # Move to the next circle
-        self.current_circle_index = (self.current_circle_index + 1) % len(self.circle_ids)
-
-        # Start blinking the new circle
-        self.blink()
+    def _stop_blink(self, index: int) -> None:
+        """Stop blinking a specific circle; revert to original color."""
+        if index < len(self.circle_ids):
+            circle_id = self.circle_ids[index]
+            orig_color = self._get_original_color()
+            self.canvas.itemconfig(circle_id, fill=orig_color)
 
     def _on_connection_change(self, connected: bool) -> None:
         """Update the UI based on the connection status."""
@@ -230,3 +239,37 @@ class ConfigurationFrame(customtkinter.CTkFrame):
     def _get_original_color(self) -> str:
         """Get the original color of the current circle."""
         return self.circles[self.current_circle_index][2]
+
+    def _auto_step(self) -> None:
+        """Auto-step through the circles."""
+        if not self.circle_ids:
+            return
+
+        # 1. Check hardware
+        pin = self.pin_mapping[self.current_circle_index]
+        is_present = self.comm_manager.probe_single_pin(pin, self.expected_device_values[self.current_circle_index])
+
+        # 2. Update color
+        current_circle_id = self.circle_ids[self.current_circle_index]
+        new_color = "green" if is_present else "red"
+        self.canvas.itemconfig(current_circle_id, fill=new_color)
+
+        # 3. Decide next step
+        if is_present:
+            # If present, move forward to the next circle
+            old_index = self.current_circle_index
+            self.current_circle_index = (self.current_circle_index + 1) % len(self.circle_ids)
+
+            # Stop blinking the old circle, start blinking the new one
+            self._stop_blink(old_index)
+            self._start_blink()
+        else:
+            # If missing, backtrack
+            self.current_circle_index = (self.current_circle_index - 1) % len(self.circle_ids)
+
+            # Stop blinking the current circle
+            self._stop_blink(self.current_circle_index)
+            self._start_blink()
+
+        # 4. Schedule next check
+        self.auto_step_task = self.after(1000, self._auto_step)

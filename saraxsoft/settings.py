@@ -34,4 +34,7 @@ class AppConfig:
     """Configuration for the app."""
 
     _ASSET_PATH = PathResolver.resolve_path("assets")
-    _ARDUINO_PORT = "/dev/cu.usbserial-120"
+    _SERIAL_PORT = "/dev/cu.usbserial-120"
+    _MCP2210_SERIAL_NUMBER = "0001757257"
+
+    CONNECTION_TYPE = "mcp2210"  # Options: "mcp2210", "serial"

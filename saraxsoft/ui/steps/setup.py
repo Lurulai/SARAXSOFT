@@ -36,7 +36,7 @@ class SetupFrame(customtkinter.CTkFrame):
         self.config_map: dict[str, tuple[customtkinter.CTkLabel, customtkinter.CTkEntry | customtkinter.CTkComboBox | customtkinter.CTkCheckBox]] = {}
 
         # Register the connection observer
-        self.parent.get_serial_manager().add_connection_observer(self._on_connection_change)
+        self.parent.get_comm_manager().add_connection_observer(self._on_connection_change)
 
         # Load the images of setups
         self.config_images = {

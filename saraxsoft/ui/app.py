@@ -4,11 +4,13 @@ from __future__ import annotations
 
 import os
 import signal
+import typing
 from typing import Any, cast
 
 import customtkinter
 from PIL import ImageTk
 
+from saraxsoft.manager.mcp2210 import MCP2210Manager
 from saraxsoft.manager.serial import SerialManager
 from saraxsoft.settings import AppConfig, ConstSettings
 from saraxsoft.ui.common.popups import Popups
@@ -25,6 +27,15 @@ customtkinter.set_default_color_theme("dark-blue")  # Themes: "blue" (standard),
 
 class App(customtkinter.CTk):
     """Application class containing the main window and functions."""
+
+    CONNECTION_TYPE_DRIVERS: typing.ClassVar[dict[str, Any]] = {
+        "mcp2210": MCP2210Manager,
+        "serial": SerialManager,
+    }
+    SERIAL_PORT: typing.ClassVar[dict[str, str]] = {
+        "mcp2210": AppConfig._MCP2210_SERIAL_NUMBER,
+        "serial": AppConfig._SERIAL_PORT,
+    }
 
     def __init__(self) -> None:
         """Initialize the application."""
@@ -43,9 +54,16 @@ class App(customtkinter.CTk):
         # App state
         self.app_state = AppState()
 
-        # Create serial manager
-        self._serial_manager = SerialManager(port=AppConfig._ARDUINO_PORT)
-        self._serial_manager.start()
+        # Create comm manager
+        driver_type = self.CONNECTION_TYPE_DRIVERS.get(AppConfig.CONNECTION_TYPE)
+        serial_port = self.SERIAL_PORT.get(AppConfig.CONNECTION_TYPE)
+        if driver_type is None:
+            raise ValueError(f"Invalid connection type: {AppConfig.CONNECTION_TYPE}. Must be one of: {list(self.CONNECTION_TYPE_DRIVERS.keys())}")
+        if serial_port is None:
+            raise ValueError(f"Invalid serial port for connection type: {AppConfig.CONNECTION_TYPE}. Must be one of: {list(self.SERIAL_PORT.keys())}")
+
+        self._comm_manager = driver_type(serial_port)
+        self._comm_manager.start()
 
         # Specify the delete window protocol with custom function/dialog
         self.protocol(
@@ -85,9 +103,9 @@ class App(customtkinter.CTk):
         """Return the coordinates to center the window."""
         return self._center(ConstSettings.MAIN_WIDTH, ConstSettings.MAIN_HEIGHT)
 
-    def get_serial_manager(self) -> SerialManager:
-        """Return the serial manager."""
-        return self._serial_manager
+    def get_comm_manager(self) -> MCP2210Manager:
+        """Return the communication manager."""
+        return self._comm_manager
 
     def _center(self, window_width: int, window_height: int) -> tuple[float, float]:
         """Return the coordinates to center the window."""
@@ -125,8 +143,8 @@ class App(customtkinter.CTk):
             popup: customtkinter.CTkToplevel = cast(customtkinter.CTkToplevel, kwargs["popup"])
             popup.grab_release()
             popup.destroy()
-        # Stop the serial manager
-        self._serial_manager.stop()
+        # Stop the comm manager
+        self._comm_manager.stop()
         # Destroy the main window
         self.destroy()
         os.kill(os.getpid(), signal.SIGTERM)

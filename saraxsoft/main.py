@@ -4,10 +4,6 @@ from __future__ import annotations
 
 from saraxsoft.ui.app import App
 
-# Constants for Arduino connection
-arduino_port: str = "COM3"  # The port where the Arduino is connected
-baud_rate: int = 9600       # Baud rate for serial communication
-
 
 def main():
     """

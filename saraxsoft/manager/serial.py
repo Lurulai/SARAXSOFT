@@ -1,3 +1,4 @@
+"""Manages the Arduino serial connection in separate threads using a publish-subscribe pattern."""
 from __future__ import annotations
 
 import threading
@@ -9,38 +10,43 @@ import serial
 import serial.tools.list_ports
 from loguru import logger
 
+from saraxsoft.manager.base import ICommManager
+
 if TYPE_CHECKING:
     from collections.abc import Callable
 
 
-class SerialManager:
+class SerialManager(ICommManager):
     """Manages the Arduino serial connection in separate threads using a publish-subscribe pattern."""
 
-    def __init__(self, port: str | None = None, baudrate: int = 9600) -> None:
+    def __init__(self, serial_port: str | None = None, baudrate: int = 9600, check_interval: float = 1.0) -> None:
         """
         Initialize the SerialManager.
 
         Parameters
         ----------
-        port : str or None, optional
+        serial_port : str or None, optional
             The port to connect to, by default None
         baudrate : int, optional
             The baudrate of the connection, by default 9600
+        check_interval : float, optional
+            Interval (in seconds) between connection checks, by default 1.0
         """
-        self.port: str | None = port
+        self.port: str | None = serial_port
         self.baudrate: int = baudrate
         self.serial_connection: serial.Serial | None = None
         self.connected: bool = False
         self.running: bool = False
+        self.check_interval: float = check_interval
 
         self._connection_observers: list[Callable[[bool], None]] = []
-        self._message_handlers: list[Callable[[str], None]] = []
+        self._command_handlers: list[Callable[[str], None]] = []
 
-        # Thread-safe queue for incoming messages
-        self._message_queue: Queue[str] = Queue()
+        # Thread-safe queue for incoming commands
+        self._command_queue: Queue[str] = Queue()
         # Event to signal when a PONG response is received
         self._ping_pong_event = threading.Event()
-        # Unique identifier for ping messages
+        # Unique identifier for ping commands
         self._ping_id: str | None = None
 
         # For sending commands and receiving responses
@@ -64,16 +70,16 @@ class SerialManager:
         """
         self._connection_observers.append(callback)
 
-    def add_message_handler(self, handler: Callable[[str], None]) -> None:
+    def add_command_handler(self, handler: Callable[[str], None]) -> None:
         """
-        Register a callback to process serial messages.
+        Register a callback to process serial commands.
 
         Parameters
         ----------
         handler : Callable[[str], None]
-            The callback to process serial messages.
+            The callback to process serial commands.
         """
-        self._message_handlers.append(handler)
+        self._command_handlers.append(handler)
 
     def _notify_connection_observers(self, connected: bool) -> None:
         """Notify all observers of the connection status."""
@@ -95,13 +101,21 @@ class SerialManager:
         self.read_thread.start()
 
         # Start dispatching thread
-        self.dispatch_thread = threading.Thread(target=self._dispatch_messages, name="DispatchThread")
+        self.dispatch_thread = threading.Thread(target=self._dispatch_commands, name="DispatchThread")
         self.dispatch_thread.daemon = True
         self.dispatch_thread.start()
 
     def stop(self) -> None:
         """Stop the serial manager."""
         self.running = False
+        if self.monitor_thread and self.monitor_thread.is_alive():
+            self.monitor_thread.join(timeout=2.0)
+        if self.read_thread and self.read_thread.is_alive():
+            self.read_thread.join(timeout=2.0)
+        if self.dispatch_thread and self.dispatch_thread.is_alive():
+            self.dispatch_thread.join(timeout=2.0)
+
+        # Close the serial connection
         if self.serial_connection and self.serial_connection.is_open:
             self.serial_connection.close()
 
@@ -112,10 +126,12 @@ class SerialManager:
                 self._attempt_connection()
             else:
                 self._check_connection()
-            time.sleep(1)
+            time.sleep(self.check_interval)
 
     def _attempt_connection(self) -> None:
         """Attempt to establish a serial connection."""
+        logger.info("Attempting to connect to Arduino...")
+
         if self.port is None:
             self._find_and_connect()
         else:
@@ -170,12 +186,12 @@ class SerialManager:
             self.serial_connection.close()
 
     def _read_serial_port(self) -> None:
-        """Continuously read from the serial port and enqueue messages."""
+        """Continuously read from the serial port and enqueue commands."""
         while self.running:
             try:
                 if self.connected and self.serial_connection and self.serial_connection.in_waiting:
                     line = self.serial_connection.readline().decode("utf-8").strip()
-                    self._message_queue.put(line)
+                    self._command_queue.put(line)
                 else:
                     time.sleep(0.01)
             except (serial.SerialException, OSError):
@@ -183,25 +199,25 @@ class SerialManager:
                 self.connected = False
                 self._notify_connection_observers(self.connected)
 
-    def _dispatch_messages(self) -> None:
-        """Dispatch messages from the queue to registered handlers."""
+    def _dispatch_commands(self) -> None:
+        """Dispatch commands from the queue to registered handlers."""
         while self.running:
             try:
-                message = self._message_queue.get(timeout=0.1)
+                command = self._command_queue.get(timeout=0.1)
                 # Handle ping/pong responses
-                if message.startswith("PONG"):
+                if command.startswith("PONG"):
                     self._ping_pong_event.set()
                     self._ping_id = None
                 # Handle command responses
                 elif self._command_event.is_set():
                     pass  # Command already completed
                 elif self._command_lock.locked():
-                    self._command_response_queue.put(message)
-                    if message.startswith(("OK", "ERROR", "INPUT_STATE")):
+                    self._command_response_queue.put(command)
+                    if command.startswith(("OK", "ERROR", "INPUT_STATE")):
                         self._command_event.set()
-                # Dispatch message to handlers
-                for handler in self._message_handlers:
-                    handler(message)
+                # Dispatch command to handlers
+                for handler in self._command_handlers:
+                    handler(command)
             except Empty:
                 continue
 
@@ -246,4 +262,4 @@ class SerialManager:
             self.serial_connection = None
         self.connected = False
         self._notify_connection_observers(self.connected)
-        time.sleep(1)
+        time.sleep(self.check_interval)
